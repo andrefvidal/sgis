@@ -3,7 +3,7 @@ class dao{
 	
 	//Função para realizar uma Query
 	public function query($sql){
-		$mysqli = new mysqli("localhost", "administrador", "newmatrix", "sgis");
+		$mysqli = new mysqli("localhost", "******", "******", "sgis");
 		
 		//Verificando a conexão
 		if(mysqli_connect_errno()){
