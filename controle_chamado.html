@@ -1,0 +1,180 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	//Memória do formulário
+	if(isset($_POST['select_departamento'])){$_POST['select_departamento'] = $_POST['select_departamento'];}
+	if(isset($_POST['select_equipe'])){$_POST['select_equipe'] = $_POST['select_equipe'];}
+	if(isset($_POST['select_tipo'])){$_POST['select_tipo'] = $_POST['select_tipo'];}
+	if(isset($_POST['selected_departamento'])){$_POST['selected_departamento'] = $_POST['selected_departamento'];}
+	if(isset($_POST['selected_equipe'])){$_POST['selected_equipe'] = $_POST['selected_equipe'];}
+	
+	//Salvando dados no BD
+	if(strlen($_POST['select_equipe']) == 1)$_POST['select_equipe'] = '0'.$_POST['select_equipe'];
+	if(strlen($_POST['select_tipo']) == 1)$_POST['select_tipo'] = '0'.$_POST['select_tipo'];
+	if(isset($_POST['salvarControle'])){
+		$try = $go->inserControle($_POST['empresa'],$_POST['select_equipe'],$_POST['select_tipo'],$_POST['controle']); $to = $xo->query($try);
+		if($to === "Successfully"){ 
+			echo "<script>alert('Controle salvo com sucesso.');</script>";
+		}else{
+			echo "<script>alert(\"".$to."\");</script>";
+		}
+		unset($_POST['salvarControle']);
+		//Refresh na página
+		echo "<script>location.href='controle_chamado.html';</script>";
+	}
+	//FIM do Salvando dados no BD
+?>
+
+<section class="container-fluid" >
+	
+	<div class="row">
+		<div class="text-center" style="margin-top:15px;margin-bottom:25px;">
+			<h1>Cadastro de composição do chamado por equipe</h1>
+		</div>
+	</div>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<div class="col-xs-12 col-sm-2"><label>Empresa</label></div>
+		<div class="col-xs-12 col-sm-2"><label>Ano</label></div>
+		<div class="col-xs-12 col-sm-4"><label>Departamento</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Equipe</label></div>
+	</div>
+	
+	<div class="row">
+		<form method="post">
+		<div class="col-xs-12 col-sm-2">
+			<input type="text" class="form-control" title="Empresa" name="empresa" value="VIVO" placeholder="VIVO" onchange="this.form.submit()">
+		</div>
+		<div class="col-xs-12 col-sm-2">
+			<input type="text" class="form-control" title="Ano" name="ano" value="<?php echo date("Y");?>" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" title="Departamento" name="select_departamento" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Selecione um Departamento</option>
+				<?php $try = $go->buscarDepartamento();$to = $xo->query($try);if(!empty($to)){foreach($to as $depart){ echo'
+				<option class="form-control" value="'.$depart['iddepartamento'].'"';
+				if(isset($_POST['select_departamento']))if($_POST['select_departamento'] == $depart['iddepartamento'])echo ' selected'; echo '>'.$depart['nome_departamento'].'</option>';
+				}};$to=0;$try=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Equipe" name="select_equipe" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Selecione uma Equipe</option>
+				<?php if(isset($_POST['select_departamento'])){$try = $go->buscarEquipe_id($_POST['select_departamento']);$to = $xo->query($try);if(!empty($to)){foreach($to as $equipe){ echo'
+				<option class="form-control" value="'.$equipe['idequipe'].'"';
+				if(isset($_POST['select_equipe']))if($_POST['select_equipe'] == $equipe['idequipe'])echo ' selected'; echo '>'.$equipe['nome_equipe'].'</option>';
+				}}}  echo $try;$to=0;$try=0;?>
+			</select>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Tipo de Atividade</label></div>
+		<div class="col-xs-12 col-sm-2"><label>Controle</label></div>
+		<div class="col-xs-12 col-sm-4"><label>Resultado</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Tipo de atividade" name="select_tipo" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Tipo de atividade</option>
+				<?php $try = $go->buscarTipo();$resu = $xo->query($try);
+				if(!empty($resu)){foreach($resu as $tipo){ echo'
+				<option class="form-control" value="'.$tipo['idtipo'].'"';
+				if(isset($_POST['select_tipo']))if($_POST['select_tipo'] == $tipo['idtipo'])echo ' selected'; echo '>'.$tipo['nome_tipo'].'</option>';}};?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-2">
+			<input type="text" class="form-control" title="Controle" name="controle" value="1" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-4"><input class="form-control" value="<?php echo $_POST['empresa'].$_POST['ano'].$_POST['select_departamento'].$_POST['select_equipe'].$_POST['select_tipo'].$_POST['controle'];?>" readonly></input>
+		</div>
+	</div>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button type="submit" class="btn btn-success btn-sm btn-block" title="Controle" name="salvarControle">Salvar Controle</button>
+		</div>
+		</form>
+	</div>
+
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="text-center" style="margin-top:15px;margin-bottom:25px;">
+			<h1>Modelos de composição do chamado cadastrados</h1>
+		</div>
+	</div>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"></div>
+		<div class="col-xs-12 col-sm-3"></div>
+		<div class="col-xs-12 col-sm-3"><label>Selecione uma equipe</label></div>
+		<div class="col-xs-12 col-sm-3"></div>
+	</div>
+	
+	<form method="post" action="#down" id="<?php if(isset($_POST['selected_departamento']) OR $_POST['selected_equipe']) echo "down";?>">
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"></div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Departamento" name="selected_departamento" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Selecione um Departamento</option>
+				<?php $try = $go->buscarDepartamento();$to = $xo->query($try);if(!empty($to)){foreach($to as $depart){ echo'
+				<option class="form-control" value="'.$depart['iddepartamento'].'"';
+				if(isset($_POST['selected_departamento']))if($_POST['selected_departamento'] == $depart['iddepartamento'])echo ' selected'; echo '>'.$depart['nome_departamento'].'</option>';
+				}};$to=0;$try=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Equipe" name="selected_equipe" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Selecione uma Equipe</option>
+				<?php if(isset($_POST['selected_departamento'])){$try = $go->buscarEquipe_id($_POST['selected_departamento']);$to = $xo->query($try);if(!empty($to)){foreach($to as $equipe){ echo'
+				<option class="form-control" value="'.$equipe['idequipe'].'"';
+				if(isset($_POST['selected_equipe']))if($_POST['selected_equipe'] == $equipe['idequipe'])echo ' selected'; echo '>'.$equipe['nome_equipe'].'</option>';
+				}}} ?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3"></div>
+	</div>
+	</form>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<?php if(isset($_POST['selected_equipe'])){ echo'
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"></div>
+		<div class="col-xs-12 col-sm-3"><label>Tipo de Atividade</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Controle do chamado</label></div>
+		<div class="col-xs-12 col-sm-3"></div>
+	</div>';
+	$try = $go->buscarControle_Tipo($_POST['selected_equipe']); $resu = $xo->query($try);if(!empty($resu)){foreach($resu as $control){ echo'
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"></div>
+		<div class="col-xs-12 col-sm-3">
+			<input style="width:200px;" type="text" title="'.$control['nome_tipo'].'" value="'.$control['nome_tipo'].'" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input style="width:200px;" type="text" title="Controle" value="'.$control['empresa_controle'].date('Y').$control['depart_controle'].$control['equipe_controle'].$control['tipo_controle'].$control['ultimo_numero'].'" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-3"></div>
+	</div>';}}
+	unset($_POST['selected_equipe'],$_POST['selected_departamento']);
+	}?>
+	
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+</section>
+
+<?php require_once("footer.html"); ?>

@@ -1,0 +1,121 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	if(isset($_POST['selectedtipo']))if(!empty($_POST['selectedtipo'])){$_POST['selectedtipo'] = $_POST['selectedtipo'];}
+	if(isset($_POST['editarSLA']))if(!empty($_POST['editarSLA'])){$_POST['editarSLA'] = $_POST['editarSLA'];}
+	
+	
+	if(isset($_POST['salvarSLA'])){//Salvar SLA
+		$try = $go->inserSla($_POST['vencimento'],$_POST['dataentrega'],$_SESSION['matr_equipeid'],$_POST['selecttipo']);$to = $xo->query($try); 
+		if($to === "Successfully"){echo "<script>alert(\"SLA salvo com sucesso.\");</script>";}else{echo "<script>alert(\"".$to."\");</script>";}unset($_POST['salvarSLA']);
+		//echo "<script>location.href='sla.html';</script>";
+	}elseif(isset($_POST['deletarSLA'])){//Delete SLA
+		$try = $go->deleSla($_POST['deletarSLA']);$to = $xo->query($try); 
+		if($to === "Successfully"){echo "<script>alert(\"SLA deletado com sucesso.\");</script>";}else{echo "<script>alert(\"".$to."\");</script>";}unset($_POST['salvarSLA']);echo "<script>location.href='sla.html';</script>";
+	}elseif(isset($_POST['updateSLA'])){//Update SLA
+		$try = $go->updateSla($_POST['updateSLA'],$_POST['sla_vencimento'],$_POST['sla_entrega']);$to = $xo->query($try);
+		if($to === "Successfully"){echo "<script>alert(\"SLA atualizado com sucesso.\");</script>";}else{echo "<script>alert(\"".$to."\");</script>";}unset($_POST['salvarSLA']);echo "<script>location.href='sla.html';</script>";
+	}
+?>
+
+<div class="container-fluid" >
+
+	<div class="row">
+		<div class="text-center" style="margin-top:15px;margin-bottom:25px;">
+       		<h1>Cadastrar SLA</h1>
+		</div>
+	</div>
+	
+    <div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<form action="" method="post">
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<select class="form-control" title="Tipo de atividade" name="selecttipo"  required>
+				<option class="form-control" value="">Tipo de atividade</option>
+				<?php $try = $go->buscarTipo();$resu = $xo->query($try);
+				if(!empty($resu)){foreach($resu as $tipo){ echo'
+				<option class="form-control" value="'.$tipo['idtipo'].'"';
+					if(isset($_SESSION['f_c_tipo_ativi']))if($_SESSION['f_c_tipo_ativi'] == $tipo['idtipo'])echo ' selected>';else echo '>';
+					else echo '>';echo $tipo['nome_tipo']. 
+				'</option>';}};?>
+			</select>
+			<p></p>
+			<label>SLA para Aprovação da Atividade</label>
+			<input type="text" class="form-control" name="vencimento" placeholder="SLA para Aprovação da Atividade" required></input>
+			<label>SLA para Entrega da Atividade</label>
+			<input type="text" class="form-control" name="dataentrega" placeholder="SLA para Entrega da Atividade" required></input>
+		</div>
+		<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="salvarSLA">Salvar</button>
+		</div>
+		</form>
+	</div>
+
+	<div class="row">
+        <div class="col-sm-12">
+        	<hr class="hr">
+        </div>
+    </div>
+	
+	<div class="row">
+		<div class="text-center" style="padding-bottom:20px;width:100%;">
+			<h1>SLA's Cadastrados</h1>
+		</div>
+	</div>
+	
+	<div class="row" id="<?php if(isset($_POST['editarSLA'])){echo "sla";}?>">
+		<form method="post" action="#sla">
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<select class="form-control" title="Tipo de atividade" name="selectedtipo" onchange="this.form.submit()">
+				<option class="form-control" value="">Tipo de atividade</option>
+				<?php $try = $go->buscarTipo();$resu = $xo->query($try);
+				if(!empty($resu)){foreach($resu as $tipo){ echo'
+				<option class="form-control" value="'.$tipo['idtipo'].'"';
+					if(isset($_POST['selectedtipo']))if($_POST['selectedtipo'] == $tipo['idtipo'])echo ' selected>';else echo '>';
+					else echo '>';echo $tipo['nome_tipo']. 
+				'</option>';}};?>
+			</select>
+			<p></p>
+			
+		</div>
+	</div>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<div class="col-xs-12 col-sm-5"></div>
+		<div class="col-xs-12 col-sm-7"><label>SLA Vencimento / SLA Data de Entrega</label></div>
+	</div>
+	<div class="row" style="padding-bottom: 50px;">
+			<?php if(isset($_POST['selectedtipo'])){
+				$try = $go->buscarSla_Tipo_id($_POST['selectedtipo'],$_SESSION['matr_equipeid']);$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $sla){ echo'
+				<div class="col-xs-12 col-sm-4"></div>
+				<div class="col-xs-12 col-sm-8">
+					<label>SLA em dias:</label>
+					<input type="text" title="'.$sla['sla_vencimento'].'" '; if(isset($_POST['editarSLA']) and $_POST['editarSLA'] == $sla['idsla']){echo 'name="sla_vencimento" value="'.$sla['sla_vencimento'].'"  style="background-color:yellow;width:100px;">';}else{echo 'value="'.$sla['sla_vencimento'].'" readonly>';}; echo '</input>
+					<input type="text" title="'.$sla['sla_entrega'].'" '; if(isset($_POST['editarSLA']) and $_POST['editarSLA'] == $sla['idsla']){echo 'name="sla_entrega" value="'.$sla['sla_entrega'].'"  style="background-color:#ccff66;width:100px;">';}else{echo 'value="'.$sla['sla_entrega'].'" readonly>';}; echo '</input>
+					<div class="btn-group btn-group-sm">';
+					if(isset($_POST['editarSLA']) and $_POST['editarSLA'] == $sla['idsla']){
+					echo '
+						<button class="btn" type="submit" title="Salvar" name="updateSLA" value="'.$sla['idsla'].'"><span class="fa fa-floppy-o fa-lg"></span></button>';}
+					echo '
+						<button class="btn" type="submit" title="Editar" name="editarSLA" value="'.$sla['idsla'].'"><span class="fa fa-pencil fa-lg"></span></button>';
+					if($_SESSION['matr_nivel'] == 3 and $_POST['editarSLA'] == $sla['idsla']){ 
+					echo '
+						<button class="btn" type="submit" title="Deletar" name="deletarSLA" value="'.$sla['idsla'].'"><span class="fa fa-eraser fa-lg"></span></button>';} echo '
+					</div>
+				</div>';}}
+			};?>
+		</form>
+	</div>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+</div>
+
+<?php
+	require_once("footer.html");
+?>

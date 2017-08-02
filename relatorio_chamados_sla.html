@@ -1,0 +1,349 @@
+<?php
+ob_start();
+//Formata uma hora/data local de acordo com o configuração de locale.
+setlocale(LC_ALL, 'pt_BR', 'pt_BR.utf-8', 'pt_BR.utf-8', 'portuguese');
+date_default_timezone_set('America/Sao_Paulo');
+require_once("dao.php");//Funções para Objeto de acesso a dados (DAO, acrônimo de Data Access Object)
+$go = new sql();$xo = new dao();
+//error_reporting(0);
+//Inicia a sessão
+session_start();
+
+if(isset($_POST['down_pdf']) OR isset($_POST['down_xls'])){
+	/** Error reporting */
+	error_reporting(E_ALL);
+	ini_set('display_errors', TRUE);
+	ini_set('display_startup_errors', TRUE);
+	if (PHP_SAPI == 'cli') die('This file should only be run from a Web Browser');
+	
+	/** Include PHPExcel */
+	require_once('C:\Apache24\htdocs\classes\PHPExcel.php');
+	require_once('C:\Apache24\htdocs\classes\PHPExcel\IOFactory.php');
+
+	// Create new PHPExcel object
+	$objPHPExcel = new PHPExcel();
+	
+	// Set document properties
+	$objPHPExcel->getProperties()->setCreator($_SESSION['matr_nome'])
+								->setLastModifiedBy($_SESSION['matr_nome'])
+								->setTitle("Relatório - Chamados vs SLA ".date('Y-m-d'))
+								->setSubject("Relatório - Chamados vs SLA ".date('Y-m-d'))
+								->setDescription("Relatório - Chamados vs SLA ".date('Y-m-d'))
+								->setKeywords("Relatório - Chamados vs SLA ".date('Y-m-d'))
+								->setCategory("Relatório - Chamados vs SLA ".date('Y-m-d'));
+								
+	$coll_cnt=0;$relatorio = array();		
+	$try = $go->buscarUsuario_Equipe($_SESSION['selectequipe']);$to = $xo->query($try);
+	foreach($to as $usuarios){ 
+		$relatorio[$coll_cnt]['id'] = $usuarios['idusuario'];
+		$relatorio[$coll_cnt]['nome'] = $usuarios['nome'];
+		++$coll_cnt;
+	}
+	$try = $go->buscarChamado_SLA_Aprovado($_SESSION['selectequipe']);$to = $xo->query($try);
+	for ($x = 0; $x < $coll_cnt; $x++) {
+		foreach($to as $cmdo){ 
+			if($relatorio[$x]['id'] == $cmdo['responsavel_c_f'] AND $cmdo['data_entrega_c_p'] < date('Y-m-d')) ++$relatorio[$x]['fora']; 
+			if($relatorio[$x]['id'] == $cmdo['responsavel_c_f'] AND $cmdo['data_entrega_c_p'] > date('Y-m-d')) ++$relatorio[$x]['dentro'];
+		}
+	}
+	$try = $go->buscarChamado_SLA_Aguardando($_SESSION['selectequipe']);$to = $xo->query($try);$count=0;
+	foreach($to as $count){ 
+		if($count['data_entrega_c_p'] > date('Y-m-d')) ++$relatorio['aprova_dentro'];
+		if($count['data_entrega_c_p'] < date('Y-m-d')) ++$relatorio['aprova_fora'];
+	}
+		
+	// Adicionando - Chamados por Colaborador
+	$objPHPExcel->setActiveSheetIndex(0);
+	$objPHPExcel->getActiveSheet()->setCellValue("A1", "")
+								->setCellValue("A2", "Fora do SLA")
+								->setCellValue("A3", "Dentro do SLA");
+	$x=0;
+	foreach(range('B', 'Z') as $letra) {
+		if($x < $coll_cnt){
+			$objPHPExcel->getActiveSheet()->setCellValue($letra."1", $relatorio[$x]['nome'])
+										->setCellValue($letra."2", $relatorio[$x]['fora'])
+										->setCellValue($letra."3", $relatorio[$x]['dentro']);
+			++$x;
+			}else{ break;
+			}
+	}
+	$x = $x + 65;$letra = chr($x);
+	$objPHPExcel->getActiveSheet()->setCellValue($letra."1", "Aguardando Aprovação")
+								->setCellValue($letra."2", $relatorio['aprova_fora'])
+								->setCellValue($letra."3", $relatorio['aprova_dentro']);
+	
+	for ($i = 'A'; $i <= $letra; $i++) { 
+		$objPHPExcel->getActiveSheet()->getColumnDimension($i)->setAutoSize(TRUE); 
+	} 
+	// Rename worksheet
+	$objPHPExcel->getActiveSheet()->setTitle('analista-chamado-'.date('Y-m-d'));
+	
+	// Adicionando - Detalhamento dos Chamados em Execução
+	$objWorkSheet = $objPHPExcel->createSheet(1);
+	$objPHPExcel->setActiveSheetIndex(1);
+	$objPHPExcel->getActiveSheet()->setCellValue("A1", "Cidade")
+								->setCellValue("B1", "Chamado")
+								->setCellValue("C1", "Execução")
+								->setCellValue("D1", "SLA")
+								->setCellValue("E1", "Analista")
+								->setCellValue("F1", "Previsão")
+								->setCellValue("G1", "OBS");
+	
+	$linha = 2;
+	$try = $go->buscarChamado_SLA_Aprovado($_SESSION['selectequipe']);$to = $xo->query($try);
+	foreach($to as $cmdo){
+		$letra = 'A';
+		$execucao = floor(strtotime(date('Y-m-d')) - strtotime($cmdo['data_aprovacao'])) / 86400;
+		$sla = floor(strtotime($cmdo['data_entrega_c_p']) - strtotime(date('Y-m-d'))) / 86400;
+		if($cmdo['data_entrega_c_p'] > date('Y-m-d'))$previsao = 'Dentro do SLA.';else $previsao = 'Fora do SLA.';
+		$objPHPExcel->getActiveSheet()->setCellValue($letra.$linha, $cmdo['nome_cidade']);++$letra;
+		$objPHPExcel->getActiveSheet()->setCellValue($letra.$linha, $cmdo['chamado']);++$letra;
+		$objPHPExcel->getActiveSheet()->setCellValue($letra.$linha, (int)$execucao);++$letra;
+		$objPHPExcel->getActiveSheet()->setCellValue($letra.$linha, (int)$sla);++$letra;
+		$objPHPExcel->getActiveSheet()->setCellValue($letra.$linha, $cmdo['nome']);++$letra;
+		$objPHPExcel->getActiveSheet()->setCellValue($letra.$linha, $previsao);++$letra;
+		$objPHPExcel->getActiveSheet()->setCellValue($letra.$linha, $cmdo['observacao_c_f']);++$letra;++$linha;
+	}
+	//Corrigindo a largura das colunas automaticamente
+	for ($i = 'A'; $i <= 'F'; $i++) { 
+		$objPHPExcel->getActiveSheet()->getColumnDimension($i)->setAutoSize(TRUE); 
+	}
+	$objPHPExcel->getActiveSheet()->getColumnDimension('G')->setWidth(35);
+	
+	//Corrigindo quebra de texto automaticamente
+	//$objPHPExcel->getActiveSheet()->getStyle('A1:I999')->getAlignment()->setWrapText(true); 
+	//$objPHPExcel->getActiveSheet()->getStyle('A1:I'.$objPHPExcel->getActiveSheet()->getHighestRow())->getAlignment()->setWrapText(true); 
+	
+	// Rename worksheet
+	$objPHPExcel->getActiveSheet()->setTitle('chamado-sla-'.date('Y-m-d'));
+
+	// Set active sheet index to the first sheet, so Excel opens this as the first sheet
+	$objPHPExcel->setActiveSheetIndex(0);
+	
+	if(isset($_POST['down_xls'])){
+		ob_clean();
+		// Redirect output to a client’s web browser (Excel2007)
+		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+		header('Content-Disposition: attachment;filename="relatorio-chamado-sla-'.date('Y-m-d').'.xlsx"');
+		header('Cache-Control: max-age=0');
+		// If you're serving to IE 9, then the following may be needed
+		header('Cache-Control: max-age=1');
+		if ( headers_sent() ) die("**Error: headers sent");
+		
+		$objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+		$objWriter->save('php://output');
+		exit;
+	}
+	if(isset($_POST['down_pdf'])){
+		ob_clean();
+		//	Change these values to select the Rendering library that you wish to use and its directory location on your server
+		$rendererName = PHPExcel_Settings::PDF_RENDERER_TCPDF;
+		//$rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
+		//$rendererName = PHPExcel_Settings::PDF_RENDERER_DOMPDF;
+		$rendererLibrary = 'tcpdf_6_2_13';
+		//$rendererLibrary = 'mPDF5.4';
+		//$rendererLibrary = 'domPDF0.6.0beta3';
+		$rendererLibraryPath = 'C:\php\lib\\' . $rendererLibrary;
+		
+		if (!PHPExcel_Settings::setPdfRenderer(
+			$rendererName,
+			$rendererLibraryPath
+			)) {
+			die(
+				'NOTICE: Please set the $rendererName and $rendererLibraryPath values' .
+				'<br />' .
+				'at the top of this script as appropriate for your directory structure'
+			);
+		}
+		// Rename worksheet
+		$objPHPExcel->getActiveSheet()->setShowGridLines(true);
+		
+		// Redirect output to a client’s web browser (PDF)
+		header('Content-Type: application/pdf');
+		header('Content-Disposition: attachment;filename="relatorio-chamado-sla-'.date('Y-m-d').'.pdf"');
+		header('Cache-Control: max-age=0');
+		$objWriter = new PHPExcel_Writer_PDF($objPHPExcel);
+		$objWriter->writeAllSheets();
+		$objWriter->save('php://output');
+		exit;
+	}
+}
+
+	require_once("head.html");
+	//Memória do formulário
+	if(isset($_POST['selectdepartamento_agd']))if(!empty($_POST['selectdepartamento_agd'])){$_SESSION['selectdepartamento_agd'] = $_POST['selectdepartamento_agd'];}
+	if(isset($_POST['selectequipe']))if(!empty($_POST['selectequipe'])){$_SESSION['selectequipe'] = $_POST['selectequipe'];};
+
+?>
+<div class="container-fluid">
+	<?php ?>
+	<h1 class="form-signin-heading text-center">Relatório de chamados dentro e fora do SLA</h1>
+
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<form method="post" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-4">
+			<label>Departamento</label>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<label>Equipe</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" name="selectdepartamento_agd" onchange="this.form.submit()">
+				<option class="form-control" value="">Selecionar Departamento</option>';
+				<?php $try = $go->buscarDepartamento();$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $depart){ echo '
+				<option class="form-control" value="'.$depart['iddepartamento'].'"';
+				if(isset($_SESSION['selectdepartamento_agd'])){if($_SESSION['selectdepartamento_agd'] == $depart['iddepartamento']){echo " selected>";}
+				else{echo ">";}}else{echo ">";}echo $depart['nome_departamento'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" name="selectequipe" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Selecionar Equipe</option>
+				<?php if(isset($_SESSION['selectdepartamento_agd'])){
+				$try = $go->buscarEquipe_id($_SESSION['selectdepartamento_agd']);$to = $xo->query($try);}
+				if(!empty($to)){foreach($to as $equipe){ echo'				
+				<option class="form-control" value="'.$equipe['nome_equipe'].'"';
+				if(isset($_SESSION['selectdepartamento_agd'])){if($_SESSION['selectequipe'] == $equipe['nome_equipe']){echo " selected>";}else{echo ">";}}
+				else{echo ">";}echo $equipe['nome_equipe'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="consultar">Consultar</button>
+		</div>
+	</div>
+	</form>
+	<p></p>
+	
+	<?php $try = $go->buscarUsuario_Equipe($_POST['selectequipe']);$consulta = $xo->query($try);
+	if(isset($_POST['consultar']) AND !empty($consulta)){ echo '
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+		<form method="post" autocomplete="off">
+		<div class="col-xs-12 col-sm-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="down_pdf">Download PDF</button>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="down_xls">Download XLSX</button>
+		</div>
+		</form>
+	</div>';}
+	?>
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	
+	<?php if(isset($_POST['consultar']) AND !empty($consulta)){ echo '
+	<h1 class="form-signin-heading text-center">Chamados por Colaborador</h1>
+	<div class="table-responsive">          
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th class="text-nowrap text-center" style="background-color:#D3D3D3;"></th>';}
+			$row_cnt=0;$vet = array();
+			if(isset($_POST['consultar']) AND !empty($consulta)){foreach($consulta as $usuarios){ 
+				$vet[$row_cnt]['id'] = $usuarios['idusuario']; echo '
+				<th class="text-nowrap text-center" style="background-color:#D3D3D3;">'.$usuarios['nome'].'</th>';
+				++$row_cnt;
+			}}
+			if(isset($_POST['consultar']) AND !empty($consulta)) echo'
+				<th class="text-nowrap text-center" style="background-color:#D3D3D3;">Aguardando Aprovação</th>
+			</tr>
+		</thead>
+		<tbody>';
+			$try = $go->buscarChamado_SLA_Aprovado($_POST['selectequipe']);$to = $xo->query($try);
+			for ($x = 0; $x < $row_cnt; $x++) {
+			if(isset($_POST['consultar']) AND !empty($to)){foreach($to as $cmdo){ 
+				if($vet[$x]['id'] == $cmdo['responsavel_c_f'] AND $cmdo['data_entrega_c_p'] > date('Y-m-d'))++$vet[$x]['dentro'];
+				if($vet[$x]['id'] == $cmdo['responsavel_c_f'] AND $cmdo['data_entrega_c_p'] < date('Y-m-d')) ++$vet[$x]['fora']; 
+			}}}
+			$try = $go->buscarChamado_SLA_Aguardando($_POST['selectequipe']);$to = $xo->query($try);$count=0;
+			if(isset($_POST['consultar']) AND !empty($to)){foreach($to as $count){ 
+				if($count['data_entrega_c_p'] > date('Y-m-d'))++$vet['aprova_dentro'];
+				if($count['data_entrega_c_p'] < date('Y-m-d')) ++$vet['aprova_fora'];
+			}}
+			if(isset($_POST['consultar']) AND !empty($consulta)) echo'
+			<tr>
+				<th class="text-nowrap text-center" style="background-color:#D3D3D3;"><a href="#" class="btn btn-sq-xs btn-warning" disabled></a> Fora do SLA</th>';
+			for ($x = 0; $x < $row_cnt; $x++) { echo '
+				<th class="text-nowrap text-center">'.$vet[$x]['fora'].'</th>';}
+			if(!empty($vet['aprova_fora'])){echo '
+				<th class="text-nowrap text-center">'.$vet['aprova_fora'].'</th>';}else{echo '<th class="text-nowrap text-center"></th>';}
+			if(isset($_POST['consultar']) AND !empty($consulta)) echo'
+			</tr>
+			<tr>
+				<th class="text-nowrap text-center" style="background-color:#D3D3D3;"><a href="#" class="btn btn-sq-xs btn-info" disabled></a> Dentro do SLA</th>';
+			for ($x = 0; $x < $row_cnt; $x++) { echo '
+				<th class="text-nowrap text-center">'.$vet[$x]['dentro'].'</th>';}
+			if(!empty($vet['aprova_dentro'])){echo '
+				<th class="text-nowrap text-center">'.$vet['aprova_dentro'].'</th>';}else{echo '<th class="text-nowrap text-center"></th>';}
+			if(isset($_POST['consultar']) AND !empty($consulta)){ echo'
+			</tr>
+		</tbody>
+	</table>
+	</div>';}elseif(isset($_POST['consultar']) AND empty($consulta)){
+		echo '<h3 class="form-signin-heading text-center">A pesquisa não retornou resultados.</h3>';
+	}
+	?>
+	<?php 
+	$try = $go->buscarChamado_SLA_Aprovado($_POST['selectequipe']);$to = $xo->query($try);
+	if(isset($_POST['consultar']) AND !empty($to)){
+		$cont_chamados = 0; $fora_sla = 0; $cont_chamados = 0;
+		foreach($to as $cmdo){ 
+			++$cont_chamados;
+			if($cmdo['data_entrega_c_p'] < date('Y-m-d'))++$fora_sla;
+			$execucao = floor(strtotime(date('Y-m-d')) - strtotime($cmdo['data_aprovacao'])) / 86400;
+			if($execucao > 60)++$cont_exe;
+			}
+		}
+	if(isset($_POST['consultar']) AND !empty($to)) echo '
+	</br>
+	<h1 class="form-signin-heading text-center">Detalhamento dos Chamados em Execução</h1>
+	<p></p>
+	<labe> - '.$cont_chamados.' Chamados estão em execução dia '.date('d/m').': '.$fora_sla.' Chamados estão fora do prazo do SLA ('.$cont_exe.' – Estão mais de 60 dias em execução).</labe>
+	<p></p>
+	<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-nowrap" style="background-color:#D3D3D3;">Cidade</th>
+				<th class="text-nowrap" style="background-color:#D3D3D3;">Chamado</th>
+				<th class="text-nowrap" style="background-color:yellow;">Execução</th>
+				<th class="text-nowrap" style="background-color:red;">SLA</th>
+				<th class="text-nowrap" style="background-color:#D3D3D3;">Analista</th>
+				<th class="text-nowrap" style="background-color:#D3D3D3;">Previsão </th>
+				<th class="text-nowrap" style="background-color:#D3D3D3;">OBS</th>
+			</tr>
+		</thead>
+		<tbody>';
+		if(isset($_POST['consultar']) AND !empty($to)){foreach($to as $cmdo){ echo '
+			<tr';if($cmdo['data_entrega_c_p'] < date('Y-m-d'))echo ' class="warning"'; echo'>
+				<td class="text-nowrap">'.$cmdo['nome_cidade'].'</td>
+				<td class="text-nowrap"><form id="filachamado" method="GET" action="/update_chamado_filho.html" target="_blank"><input type="submit" id="'.$cmdo['idchamado'].'" name="chamado" value="'.$cmdo['chamado'].'" style="display:none;"/><a style="cursor: pointer" onclick="$(\'#'.$cmdo['idchamado'].'\').click();">'.$cmdo['chamado'].'</a></input></form></td>
+				<td class="text-nowrap">'; $execucao = floor(strtotime(date('Y-m-d')) - strtotime($cmdo['data_aprovacao'])) / 86400; echo (int)$execucao.'</td>
+				<td class="text-nowrap"><div style="width:40px;">';$sla = floor(strtotime($cmdo['data_entrega_c_p']) - strtotime(date('Y-m-d'))) / 86400; echo (int)$sla.'</div></td>
+				<td class="text-nowrap">'.$cmdo['nome'].'</td>
+				<td class="text-nowrap">';if($cmdo['data_entrega_c_p'] > date('Y-m-d'))echo 'Dentro do SLA.';else echo 'Fora do SLA.'; echo'</td>
+				<td>'.$cmdo['observacao_c_f'].'</td>
+			</tr>';}}
+		if(isset($_POST['consultar']) AND !empty($to))echo '
+		</tbody>
+	</table>
+	</div>';?>
+</div>	
+<?php
+	require_once("footer.html");
+?>

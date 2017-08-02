@@ -1,0 +1,488 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	//Consultando todos os dados do chamado
+	if(!empty($_GET['chamado'])){
+		$try = $go->buscarChamadoFilho_CPai($_GET['chamado']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $cmdof){ 
+			$_POST['updtchamado'] = $cmdof['chamado'];					$_POST['updtrdm_statuscf'] = $cmdof['rdm_status'];
+			$_POST['idchamadopai'] = $cmdof['idchamado'];       		$_POST['updthor_turnocf'] = $cmdof['horario_turno'];
+			$_POST['updtobservacaocf'] = $cmdof['observacao_c_f'];		$_POST['updttp_execucaocf'] = $cmdof['tempo_execucao'];
+			$_POST['updttc_campocf'] = $cmdof['tecnico_campo'];			$_SESSION['historicofilho'] = $cmdof['historico_c_f']; 
+			$_POST['updtdataresolucao'] = $cmdof['data_resolucao'];   	$_POST['updtlmtmtr_pcpcf'] = $cmdof['limitematerial_pcp'];
+			$_POST['updtresponsavelcf'] = $cmdof['responsavel_c_f'];	$_POST['updt_nomestatusfilho'] = $cmdof['nome_status'];
+			$_POST['updtidstatusfilho'] = $cmdof['status_agenda_c_f'];  $_POST['updtrdmcf'] = $cmdof['rdm']; 
+			$_POST['updtnomeequipecf'] = $cmdof['nome_equipe'];			$_POST['updtvencimentocf'] = $cmdof['vencimento']; 
+			$_POST['updtcrongm_pcpcf'] = $cmdof['cronograma_pcp'];      $_POST['idchamado_filho'] = $cmdof['idchamado_filho'];
+			$_POST['updtlimite_pcpcf'] = $cmdof['limite_pcp'];	$_POST['updtnomeresponcf'] = $cmdof['nome'].' '.$cmdof['sobrenome'];
+		}}$to=0;
+		//Histórico do chamado Filho
+		if(empty($_POST['updtresponsavelcf']))$_POST['hist_responsavel'] = 0;else $_POST['hist_responsavel'] = $_POST['updtresponsavelcf'];
+		$_POST['hist_rdm_status'] = $_POST['updtrdm_statuscf'];		$_POST['hist_crongm_pcp'] = $_POST['updtcrongm_pcpcf']; 
+		$_POST['hist_statuscf'] = $_POST['updtidstatusfilho'];      $_POST['hist_tc_campo'] = $_POST['updttc_campocf'];	
+		$_POST['hist_limite_pcp'] = $_POST['updtlimite_pcpcf'];   	$_POST['hist_observacao'] = $_POST['updtobservacaocf'];
+		$_POST['hist_rdm'] = $_POST['updtrdmcf'];					$_POST['hist_nomestatuscf'] = $_POST['updt_nomestatusfilho'];
+		
+		$try = $go->buscarChamadoPai_id($_GET['chamado']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $cmdo){ $to=0; 
+			$_POST['updt_data_aprovacao'] = $cmdo['data_aprovacao'];
+			$_SESSION['historicopai'] = $cmdo['historico']; 				$_POST['updt_idstatuspai'] = $cmdo['idstatus'];
+			$_POST['updt_justificativa'] = $cmdo['idjustificativa']; $_POST['updt_nomestatuspai'] = $cmdo['nome_status'];
+			$_POST['idequipepai'] = $cmdo['idequipe'];					$_POST['idtipopai'] = $cmdo['idtipo'];
+		}}
+		////Histórico do chamado Pai
+		$_POST['hist_idstatuspai'] = $_POST['updt_idstatuspai'];	$_POST['hist_nomestatuspai'] = $_POST['updt_nomestatuspai'];
+		$_POST['hist_justificativa'] =  $_POST['updt_justificativa']; $_POST['hist_data_aprovacao'] = $_POST['updt_data_aprovacao'];
+	}
+	
+	//Memória do formulário
+	if(isset($_POST['arquivo']) AND !empty($_POST['arquivo']))$_SESSION['arquivo'] = $_POST['arquivo'];
+	
+	if(isset($_POST['responsavel']))if(!empty($_POST['responsavel'])){
+		$_POST['updtresponsavelcf'] = $_POST['responsavel'];
+		$try = $go->buscarUsuario_Nome_id($_POST['responsavel']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $mt){$_POST['updte_nome_respon'] = $mt['nome'].' '.$mt['sobrenome'];}}
+	}
+
+	if(isset($_POST['hor_turnocf']) AND !empty($_POST['hor_turnocf']))$_POST['updthor_turnocf'] = $_POST['hor_turnocf'];
+	if(isset($_POST['tp_execucaocf']) AND !empty($_POST['tp_execucaocf']))$_POST['updttp_execucaocf'] = $_POST['tp_execucaocf'];
+	if(isset($_POST['observacaocf']) AND !empty($_POST['observacaocf']))$_POST['updtobservacaocf'] = $_POST['observacaocf'];
+	if(isset($_POST['dataresolucao']) AND !empty($_POST['dataresolucao']))$_POST['updtdataresolucao'] = $_POST['dataresolucao'];
+	if(isset($_POST['idstatusfilho']) AND !empty($_POST['idstatusfilho'])){
+		$_POST['updtidstatusfilho'] = $_POST['idstatusfilho'];
+		$try = $go->buscarStatus_id($_POST['idstatusfilho']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $sts){$_POST['updt_nomestatusfilho'] = $sts['nome_status'];}}$to=0;
+	}
+    
+	if(isset($_POST['idequipepai']) AND !empty($_POST['idequipepai']))$_POST['idequipepai'] = $_POST['idequipepai'];
+	if(isset($_POST['idtipopai']) AND !empty($_POST['idtipopai']))$_POST['idtipopai'] = $_POST['idtipopai'];
+	if(isset($_POST['data_aprovacao']) AND !empty($_POST['data_aprovacao'])){
+		$_SESSION['updt_data_aprovacao'] = $_POST['data_aprovacao'];$_POST['updt_data_aprovacao'] = $_POST['data_aprovacao'];
+	}
+	if(isset($_POST['justificativa']) AND !empty($_POST['justificativa'])){
+		$_SESSION['updt_justificativa'] = $_POST['justificativa'];$_POST['updt_justificativa'] = $_POST['justificativa'];
+	}
+	if(isset($_POST['idstatuspai']) AND !empty($_POST['idstatuspai'])){
+		$_SESSION['updt_idstatuspai'] = $_POST['idstatuspai'];
+		$_POST['updt_idstatuspai'] = $_POST['idstatuspai'];
+		$try = $go->buscarStatus_id($_POST['idstatuspai']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $sts){$_SESSION['updt_nomestatuspai'] = $sts['nome_status'];$_POST['updt_nomestatuspai'] = $sts['nome_status'];}}$to=0;
+	}
+	//FIM da Memória do formulário
+	
+	$try = $go->buscarStatus_id($_POST['hist_statuscf']); $to = $xo->query($try);foreach($to as $sts){$hist_sts = $sts['nome_status'];}
+	//Atualizando histórico do chamado Filho	
+	if(isset($_POST['updtChamadoFilho'])){
+		if($_POST['hist_responsavel'] != $_POST['updtresponsavelcf']) $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' roteou o chamado para fila do analista '.$_POST['updte_nome_respon'].' - '.date('d/m/Y H:i').PHP_EOL;
+		if($_POST['hist_crongm_pcp'] != $_POST['updtcrongm_pcpcf']) $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' alterou a data do cronograma do chamado para '.$xo->sql_to_br($_POST['updtcrongm_pcpcf']).' - '.date('d/m/Y H:i').PHP_EOL;
+		if($_POST['hist_statuscf'] != $_POST['updtidstatusfilho']) $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' alterou o status do chamado de '.$hist_sts.' para '.$_POST['updt_nomestatusfilho'].' - '.date('d/m/Y H:i').PHP_EOL;
+		if($_POST['hist_rdm'] !== $_POST['updtrdmcf']) $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' alterou a número da RDM de '.$_POST['hist_rdm'].' para '.$_POST['updtrdmcf'].' - '.date('d/m/Y H:i').PHP_EOL;
+		if($_POST['hist_rdm_status'] != $_POST['updtrdm_statuscf']) $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' alterou o status da RDM de '.$_POST['hist_rdm_status'].' para '.$_POST['updtrdm_statuscf'].' - '.date('d/m/Y H:i').PHP_EOL;
+		if($_POST['hist_tc_campo'] != $_POST['updttc_campocf']) $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' alterou o técnico de campo de '.$_POST['hist_tc_campo'].' para '.$_POST['updttc_campocf'].' - '.date('d/m/Y H:i').PHP_EOL;
+		if($_POST['hist_observacao'] != $_POST['updtobservacaocf']) $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' alterou a observação de '.$_POST['hist_observacao'].' para '.$_POST['updtobservacaocf'].' - '.date('d/m/Y H:i').PHP_EOL;
+	}
+	
+	$try = $go->buscarStatus_id($_POST['hist_idstatuspai']); $to = $xo->query($try);if(!empty($to)){foreach($to as $sts){$hist_sts_pai = $sts['nome_status'];}}
+	$try = $go->buscarJustificativa_id($_SESSION['updt_justificativa']);$to = $xo->query($try);if(!empty($to)){foreach($to as $just){$nome_justificativa = $just['nome_justificativa'];}}
+	//Atualizando histórico do chamado Pai E chamado Filho
+	if(isset($_POST['update_statusfilhoid'])){
+		if($_POST['hist_idstatuspai'] != $_SESSION['updt_idstatuspai']) $_SESSION['historicopai'] .= 'O analista '.$_SESSION['matr_nome'].' alterou o status do chamado de '.$hist_sts_pai.' para '.$_SESSION['updt_nomestatuspai'].' - '.date('d/m/Y H:i').PHP_EOL;
+		if(empty($_POST['hist_data_aprovacao']) AND $_POST['hist_data_aprovacao'] != $_SESSION['updt_data_aprovacao'])$_SESSION['historicopai'] .= 'O analista '.$_SESSION['matr_nome'].' aprovou o chamado no dia '.strftime('%d de %B de %Y', strtotime('today')).PHP_EOL;
+		if(!empty($_SESSION['updt_justificativa']) AND $_POST['hist_justificativa'] != $_SESSION['updt_justificativa'])$_SESSION['historicopai'] .= 'O analista '.$_SESSION['matr_nome'].' alterou a justificativa do chamado para '.$nome_justificativa.' - '.date('d/m/Y H:i').PHP_EOL;
+		if($_POST['hist_responsavel'] != $_SESSION['matr_usuarioid'] AND $_SESSION['updt_nomestatuspai'] == 'Aprovado') $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' roteou o chamado para fila do analista '.$_SESSION['matr_nome'].' - '.date('d/m/Y H:i').PHP_EOL;
+		if(empty($_POST['hist_statuscf']) AND $_SESSION['updt_nomestatuspai'] == 'Aprovado') $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' alterou o status do chamado para Agendar - '.date('d/m/Y H:i').PHP_EOL;
+	}
+	
+	//Salvando dados no BD
+	
+	if(isset($_POST['update_statusfilhoid'])){//Atualizando chamado Pai E chamado Filho no BD
+		$try = $go->updateChamadoPai_DentrodoFilho($_POST['idchamadopai'],$_SESSION['historicopai'],$_SESSION['updt_data_aprovacao'],$_SESSION['updt_idstatuspai'],$_SESSION['updt_justificativa']); $to1 = $xo->query($try);
+		
+		if($to1 === "Successfully" AND $_SESSION['updt_nomestatuspai'] == 'Aprovado'){$try = $go->updateChamadoFilho_StsFilho($_POST['idchamado_filho'],$_SESSION['matr_usuarioid'],$_POST['updthor_turnocf'],$_POST['updttp_execucaocf'],$_SESSION['historicofilho']); $to2 = $xo->query($try);}
+		
+		if($to1 === "Successfully" AND empty($to2)){
+			echo "<script>alert('Chamado Pai atualizado com sucesso. Falha ao atualizar chamado filho.');</script>";
+		}elseif($to1 === "Successfully" AND $to2 === "Successfully"){
+			echo "<script>alert('Chamado Pai e Filho atualizados com sucesso.');</script>";
+		}else{
+			echo "<script>alert(\"".$to1.'-'.$to2."\");</script>";
+		}
+		unset($_POST['updtChamadoPai'],$_SESSION['updt_justificativa'],$_SESSION['historicopai'],$_SESSION['updt_data_aprovacao'],$_SESSION['historicofilho']);
+		//Refresh na página
+		//echo "<script>location.href='update_chamado_filho.html?chamado=".$_GET['chamado']."';</script>";
+	}
+	if(isset($_POST['updtChamadoFilho'])){//Atualizando chamado Filho no BD
+		$try = $go->updateChamadoFilho($_POST['idchamado_filho'],$_POST['updtobservacaocf'],$_POST['updtresponsavelcf'],$_POST['updtidstatusfilho'],$_POST['updthor_turnocf'],$_POST['updttp_execucaocf'],$_SESSION['historicofilho'],$_POST['updtdataresolucao']); 
+		$to = $xo->query($try);
+		if($to === "Successfully"){
+			echo "<script>alert('Chamado Filho atualizado com sucesso.');</script>";
+		}else{
+			echo "<script>alert(\"".$to."\");</script>";
+		}
+		unset($_POST['updtChamadoFilho'],$_SESSION['historicofilho']);
+		//Refresh na página
+		echo "<script>location.href='update_chamado_filho.html?chamado=".$_GET['chamado']."';</script>";
+	}
+	//FIM do Salvando dados no BD
+	
+	//Deletando Arquivo
+	if(isset($_POST['deletarArquivo'])){
+		$del = $go->updateArquivo_Caminho($_SESSION['arquivo']); $to = $xo->query($del);
+		if($to === "Successfully"){echo "<script>alert(\"Arquivo deletado com sucesso.\");</script>";}else echo "<script>alert(\"".$to."\");</script>";
+		$to = 0; unset($_POST['deletarArquivo']);}
+	//FIM Deletando Arquivo
+
+?>
+
+<div class="container-fluid">
+	<?php ?>
+	
+	<h1 class="text-center">Atualizar Chamado Filho</h1>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<a class="btn btn-primary btn-sm btn-block" onClick="history.go(-1)">Voltar</a>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<form method="GET" action="/cad_chamado_apoio.html">
+		<div class="col-xs-12 col-sm-3">
+			<input type="hidden" name="idfilho" value="<?php echo $_POST['idchamado_filho'];?>">
+			<button style="cursor: pointer" class="btn btn-primary btn-sm btn-block" type="submit" name="chamado" 
+			value="<?php echo $_POST['updtchamado'];?>" <?php if($_POST['updtnomeresponcf'] != $_SESSION['matr_nome'] OR $_POST['hist_nomestatuscf'] == 'Concluído') echo ' disabled';?>>Cadastrar chamado apoio</button>
+		</div>
+		</form>
+	</div>
+	<p></p>
+	<div class="row">  
+		<div class="col-xs-12 col-sm-12">
+		<div class="table-responsive">          
+			<table class="table">
+				<thead>
+					<tr>
+						<th class="text-center">Chamado</th>
+						<th class="text-center">Equipe Solicitante</th>
+						<th class="text-center">Responsável Solicitação</th>
+						<th class="text-center">Equipe Solicitada</th>
+						<th class="text-center">Analise C.Apoio</th>
+						<th class="text-center">Vencimento</th>
+						<th class="text-center">Data Analise</th>
+						<th class="text-center">Analista Responsável</th>
+						<th class="text-center">Remover?</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php $try = $go->buscarChamadoApoio_CFilho_idFilho($_GET['chamado']);$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $cmdof){ echo'
+					<tr>
+						<td class="text-center"><form method="GET" action="/update_chamado_apoio.html">
+						<input type="hidden" name="idchamadofilho" value="'.$_GET['chamado'].'">
+						<input type="submit" id="'.$cmdof['chamado'].'cp'.'" name="idchamadoapoio" value="'.$cmdof['idchamado_apoio'].'" style="display:none;"><a style="cursor: pointer" onclick="$(\'#'.$cmdof['chamado'].'cp'.'\').click();">'.$cmdof['chamado'].'</a></input>
+						</form></td>
+						<td class="text-center">'.$cmdof['e_rqtante'].'</td>
+						<td class="text-center">'.$cmdof['solicitante'].'</td>
+						<td class="text-center">'.$cmdof['e_solicitada'].'</td>
+						<td class="text-center">'.$cmdof['analise_chamado'].'</td>
+						<td class="text-center">';if(!empty($cmdof['data_lmt_analise']))echo $xo->sql_to_br($cmdof['data_lmt_analise']); echo'</td>
+						<td class="text-center">';if(!empty($cmdof['data_analise']))echo $xo->sql_to_br($cmdof['data_analise']); echo'</td>
+						<td class="text-center">'.$cmdof['r_analise'].'</td>
+						<td class="text-center">';if(empty($cmdof['analise_chamado']) AND $_POST['updt_nomestatusfilho'] !== 'Concluído'){echo '<form method="post"><button class="btn" type="submit" title="Deletar" name="deletarCApoio" value="'.$cmdof['idchamado_apoio'].'"><span class="fa fa-eraser fa-lg"></span></button></form>';}echo'</th>
+					</tr>
+				';}}$to=0;?>
+				</tbody>
+			</table>
+		</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<form method="GET" action="/arquivo.html">
+		<div class="col-xs-12 col-sm-3">
+			<input type="hidden" name="idcmd" value="<?php echo $_POST['idchamadopai'];?>">
+			<button class="btn btn-primary btn-sm btn-block" type="submit" name="chamado" value="<?php echo $_POST['updtchamado'];?>" <?php if($_POST['updtnomeequipecf'] != $_SESSION['matr_equipe'] OR $_POST['hist_nomestatuscf'] == 'Concluído') echo ' disabled';?>>Inserir arquivo</button>
+		</div>
+		</form>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-12">
+			<div class="table-responsive">          
+				<table class="table">
+					<thead>
+						<tr>
+							<th class="text-center">Nome do arquivo</th>
+							<th class="text-center">Download</th>
+							<th class="text-center">Responsável</th>
+							<th class="text-center">Data Inserção</th>
+							<th class="text-center">Observação</th>
+							<th class="text-center">Remover?</th>
+						</tr>
+					</thead>
+					<tbody>
+					<?php $try = $go->buscarArquivo_ChamadoFilho($_GET['chamado']);$to = $xo->query($try);
+					if(!empty($to)){foreach($to as $arq){ echo'
+						<tr>
+							<td class="text-center">'.$arq['nome_arquivo'].'</td>
+							<td class="text-center"><a target="_blank" href="'.$arq['caminho'].'">';
+							if($arq['caminho'] != "deletado"){echo 'Link';} echo'</a></td>
+							<td class="text-center">'.$arq['nome'].' '.$arq['sobrenome'].'</td>
+							<td class="text-center">'.$arq['data_criacao_arq'].'</td>
+							<td class="text-center">'.$arq['observacao_arq'].'</td>
+							<td class="text-center">';if($_POST['updtresponsavelcf'] == $_SESSION['matr_usuarioid'] and $arq['caminho'] != "deletado"){echo '
+								<form method="post">
+									<input type="checkbox" name="arquivo" value="'.$arq['idarquivo'].'"  onchange="this.form.submit()">';
+									if(isset($_POST['arquivo']) AND $_SESSION['arquivo'] ==  $arq['idarquivo']){ echo'
+									<button type="button" class="btn" data-toggle="modal" data-target="#deleta_arq"><span class="fa fa-eraser fa-lg"></span></button>';}
+									echo'
+								</form>';}echo'
+							</td>
+						</tr>
+					';}}?>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="container">
+			<div class="modal fade" id="deleta_arq" role="dialog">
+				<div class="modal-dialog">
+				<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">Deseja remover esse arquivo?</h4>
+					</div>
+					<div class="modal-body">
+						<div class="row">   
+							<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+								<form method="post">
+									<button class="btn btn-block" type="submit" title="Deletar" name="deletarArquivo"><span class="fa fa-eraser fa-lg"></span>SIM</button>
+								</form>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+					</div>
+				</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row" id="top">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+	
+	<form method="post" action="#top" autocomplete="off">
+	<h1 class="text-center">Informações do Chamado Pai</h1>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Chamado</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<input type="text" class="form-control" title="Chamado" value="<?php echo $_POST['updtchamado']?>" readonly>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Vencimento</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Data Aprovação</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Status do chamado Pai</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Justificativa</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" title="Vencimento" placeholder="Vencimento" value="<?php if(isset($_POST['updtvencimentocf']))echo $_POST['updtvencimentocf'];?>" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" name="data_aprovacao" title="Data Aprovação" value="<?php if(!empty($_POST['updt_data_aprovacao'])){echo $_POST['updt_data_aprovacao'];}else{echo date('Y-m-d');}?>" <?php if(!empty($_POST['updt_data_aprovacao']) AND $_POST['hist_nomestatuspai'] != 'Aguardando aprovação' AND $_SESSION['matr_nivel'] != 3)echo 'disabled';?> required>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Status do chamado" name="idstatuspai" onchange="this.form.submit()" <?php if(isset($_POST['hist_nomestatuspai']) AND $_POST['hist_nomestatuspai'] != 'Aguardando aprovação' AND $_SESSION['matr_nivel'] != 3)echo 'disabled';?> required>
+				<option class="form-control" value="">Status do chamado Pai</option>
+				<?php $try = $go->buscarStatus_Pai();$to = $xo->query($try);if(!empty($to)){foreach($to as $stt){$to=0; echo'
+				<option class="form-control" value="'.$stt['idstatus'].'"';if(isset($_POST['updt_idstatuspai']) AND $_POST['updt_idstatuspai'] == $stt['idstatus'])echo ' selected';echo '>'.$stt['nome_status'].'</option>';}}
+				?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Justificativa" name="justificativa" onchange="this.form.submit()" <?php if(isset($_POST['hist_nomestatuspai']) AND $_POST['hist_nomestatuspai'] != 'Aguardando aprovação' AND $_SESSION['matr_nivel'] != 3)echo 'disabled';if($_POST['updt_nomestatuspai'] == 'Reprovado' OR $_POST['updt_nomestatuspai'] == 'Cancelado')echo ' required';?>>
+				<option class="form-control" value="">Justificativa</option>';
+				<?php if(isset($_POST['updt_nomestatuspai'])){
+				$try = $go->buscarJustificativa_NomeStatus($_POST['updt_nomestatuspai']);$to = $xo->query($try);if(!empty($to)){foreach($to as $just){ echo'
+				<option class="form-control" value="'.$just['idjustificativa'].'"';if(isset($_SESSION['updt_justificativa']))if($_SESSION['updt_justificativa'] == $just['idjustificativa'])echo ' selected';echo '>'.$just['nome_justificativa'].'</option>';}}
+				}?>
+			</select>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">    
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button class="btn btn-success btn-sm btn-block" name="updtChamadoPai" <?php if($_POST['updt_nomestatuspai'] == 'Aprovado') echo 'type="button"  data-toggle="modal" data-target="#aprovar" ';else echo 'type="submit" ';?> <?php if($_SESSION['matr_nivel'] != 3 AND $_POST['hist_nomestatuspai'] == 'Aprovado' OR $_SESSION['matr_nivel'] != 3 AND $_POST['hist_nomestatuspai'] == 'Cancelado' OR $_SESSION['matr_nivel'] != 3 AND $_POST['hist_nomestatuspai'] == 'Reprovado' OR $_SESSION['matr_nivel'] != 3 AND $_POST['updt_nomestatuspai'] == 'Aguardando aprovação' OR $_SESSION['matr_equipe'] == 'PCP' OR $_POST['updt_nomestatuspai'] != 'Aprovado' AND empty($_SESSION['updt_justificativa']))echo ' disabled';?>>Atualizar chamado Pai</button>
+		</div>
+	</div>
+	</form>
+	
+	<div class="row" id="pcp">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+	
+	<h1 class="text-center">Informações de Agendamento</h1>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<form method="post" action="#pcp" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-9"><p class="text-right">Alterar a caixa de entrada do chamado:</p></div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Escolha a matrícula desejada." name="responsavel" 
+			<?php if($_POST['hist_nomestatuscf'] == 'Concluído' OR $_POST['hist_nomestatuspai'] != 'Aprovado' AND $_SESSION['matr_nivel'] != 3) echo 'readonly';elseif($_POST['updtnomeresponcf'] != $_SESSION['matr_nome'] OR $_POST['updt_nomestatuspai'] != 'Aprovado')echo ' disabled';?>>
+				<option class="form-control" value="">Aguardando Aprovação</option>
+				<?php if(!empty($_POST['updtnomeresponcf']) AND $_POST['updtnomeresponcf'] != $_SESSION['matr_nome']){echo '
+				<option class="form-control" value="" selected>'.$_POST['updtnomeresponcf'].'</option>';}
+				else{$try = $go->buscarUsuario_Equipe($_SESSION['matr_equipe']);
+					$to = $xo->query($try);if(!empty($to)){foreach($to as $mt){ echo'
+				<option class="form-control" value="'.$mt['idusuario'].'"';if(isset($_POST['updtresponsavelcf']) AND $_POST['updtresponsavelcf'] == $mt['idusuario'])echo ' selected';elseif($_SESSION['matr_nome'] == $mt['nome'].' '.$mt['sobrenome']) echo ' selected';echo '>'.$mt['nome'].' '.$mt['sobrenome'].'</option>';}}
+				}?>
+			</select>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Horário da Atividade</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Tempo de Execução</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Status do chamado Filho</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Data Resolução</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<select type="text" class="form-control" name="hor_turnocf" title="Horário da Atividade" 
+			<?php if($_SESSION['matr_equipe'] == 'PCP' OR $_POST['hist_nomestatuscf'] == 'Concluído' OR $_POST['hist_nomestatuspai'] != 'Aprovado') echo 'readonly';?> required>
+				<option value="" >Selecione o Horário</option>
+				<option value="Diurno (8:30-12:00)" <?php if(isset($_POST['updthor_turnocf']))if($_POST['updthor_turnocf'] == 'Diurno (8:30-12:00)')echo 'selected';?>>Diurno (8:30-12:00)</option>
+				<option value="Diurno (14:00-18:00)" <?php if(isset($_POST['updthor_turnocf']))if($_POST['updthor_turnocf'] == 'Diurno (14:00-18:00)')echo 'selected';?>>Diurno (14:00-18:00)</option>
+				<option value="Noturno (00:00-06:00)" <?php if(isset($_POST['updthor_turnocf']))if($_POST['updthor_turnocf'] == 'Noturno (00:00-06:00)')echo 'selected';?>>Noturno (00:00-06:00)</option>
+				<option value="Noturno (02:00-06:00)" <?php if(isset($_POST['updthor_turnocf']))if($_POST['updthor_turnocf'] == 'Noturno (02:00-06:00)')echo 'selected';?>>Noturno (02:00-06:00)</option>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select type="text" class="form-control" name="tp_execucaocf" title="Tempo de Execução" 
+			<?php if($_SESSION['matr_equipe'] == 'PCP' OR $_POST['hist_nomestatuscf'] == 'Concluído' OR $_POST['hist_nomestatuspai'] != 'Aprovado') echo 'readonly';?> required>
+				<option value="" >Selecione o Tempo</option>
+				<option value="00:15:00" <?php if(isset($_POST['updttp_execucaocf']))if($_POST['updttp_execucaocf'] == '00:15:00')echo 'selected';?>>15 minutos.</option>
+				<option value="00:30:00" <?php if(isset($_POST['updttp_execucaocf']))if($_POST['updttp_execucaocf'] == '00:30:00')echo 'selected';?>>30 minutos.</option>
+				<option value="00:45:00" <?php if(isset($_POST['updttp_execucaocf']))if($_POST['updttp_execucaocf'] == '00:45:00')echo 'selected';?>>45 minutos.</option>
+				<option value="01:00:00" <?php if(isset($_POST['updttp_execucaocf']))if($_POST['updttp_execucaocf'] == '01:00:00')echo 'selected';?>>1 hora.</option>
+				<option value="01:30:00" <?php if(isset($_POST['updttp_execucaocf']))if($_POST['updttp_execucaocf'] == '01:30:00')echo 'selected';?>>1 hora e 30 minutos.</option>
+				<option value="02:00:00" <?php if(isset($_POST['updttp_execucaocf']))if($_POST['updttp_execucaocf'] == '02:00:00')echo 'selected';?>>2 horas.</option>
+				<option value="02:30:00" <?php if(isset($_POST['updttp_execucaocf']))if($_POST['updttp_execucaocf'] == '02:30:00')echo 'selected';?>>2 horas e 30 minutos.</option>
+				<option value="03:00:00" <?php if(isset($_POST['updttp_execucaocf']))if($_POST['updttp_execucaocf'] == '03:00:00')echo 'selected';?>>3 horas.</option>
+				<option value="03:30:00" <?php if(isset($_POST['updttp_execucaocf']))if($_POST['updttp_execucaocf'] == '03:30:00')echo 'selected';?>>3 horas e 30 minutos.</option>
+				<option value="04:00:00" <?php if(isset($_POST['updttp_execucaocf']))if($_POST['updttp_execucaocf'] == '04:00:00')echo 'selected';?>>4 horas.</option>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Status do chamado" name="idstatusfilho" onchange="this.form.submit()" <?php if($_POST['hist_nomestatuscf'] == 'Concluído' AND $_SESSION['matr_nivel'] != 3 OR $_POST['hist_nomestatuspai'] != 'Aprovado' AND $_SESSION['matr_nivel'] != 3)echo ' readonly';?> required>
+				<option class="form-control" value="">Status do chamado Filho</option>
+				<?php if($_SESSION['matr_equipe'] == 'PCP'){ $try = $go->buscarStatus_PCP();$to = $xo->query($try);}
+				else{$try = $go->buscarStatus_Filho();$to = $xo->query($try);}if(!empty($to)){foreach($to as $stt){$to=0; echo'
+				<option class="form-control" value="'.$stt['idstatus'].'"';if(isset($_POST['updtidstatusfilho']) AND $_POST['updtidstatusfilho'] == $stt['idstatus'])echo ' selected';echo '>'.$stt['nome_status'].'</option>';}}?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" id="data_resol" class="form-control" name="dataresolucao" title="Data Resolução" value="<?php if(isset($_POST['updt_nomestatusfilho']) AND $_POST['updt_nomestatusfilho'] == 'Concluído'){echo date("Y-m-d");}elseif(!empty($_POST['updtdataresolucao'])){echo $_POST['updtdataresolucao'];}?>" readonly>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-12"><label>Observação</label></div>
+	</div>
+	<div class="row">  
+		<div class="col-xs-12 col-sm-12">
+			<textarea rows="2" type="text" class="form-control" name="observacaocf" title="Observação" <?php if($_POST['hist_nomestatuscf'] == 'Concluído' OR $_POST['hist_nomestatuspai'] != 'Aprovado')echo ' readonly';?>><?php if(isset($_POST['updtobservacaocf'])) echo $_POST['updtobservacaocf'];?></textarea>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">    
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="updtChamadoFilho" <?php if($_SESSION['matr_equipe'] == 'PCP' AND $_POST['hist_nomestatuscf'] == 'Concluído' OR $_POST['hist_nomestatuscf'] == 'Concluído' AND $_SESSION['matr_nivel'] != 3 OR $_POST['hist_nomestatuspai'] != 'Aprovado' AND $_SESSION['matr_nivel'] != 3)echo ' disabled';?>>Atualizar chamado Filho</button>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>		
+	</form>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<!-- Modal Aprovar Chamado-->
+	<div class="container">
+		<div class="modal fade" id="aprovar" role="dialog">
+			<div class="modal-dialog modal-lg">
+			<!-- Modal content-->
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title text-center">Deseja aprovar o chamado <?php echo $_SESSION['chamadopai'];?>?</h4>
+				</div>
+				<div class="modal-body">
+					<form method="post" autocomplete="off">
+						<div class="row">
+							<div class="col-xs-12 col-sm-4"><label>Horário da Atividade</label></div>
+							<div class="col-xs-12 col-sm-4"><label>Tempo de Execução</label></div>
+						</div>
+						<div class="row">
+							<div class="col-xs-12 col-sm-4">
+								<select type="text" class="form-control" name="hor_turnocf" title="Horário da Atividade" required>
+									<option value="" >Selecione o Horário</option>
+									<option value="Diurno (8:30-12:00)">Diurno (8:30-12:00)</option>
+									<option value="Diurno (14:00-18:00)">Diurno (14:00-18:00)</option>
+									<option value="Noturno (00:00-06:00)">Noturno (00:00-06:00)</option>
+									<option value="Noturno (02:00-06:00)">Noturno (02:00-06:00)</option>
+								</select>
+							</div>
+							<div class="col-xs-12 col-sm-4">
+								<select type="text" class="form-control" name="tp_execucaocf" title="Tempo de Execução" required>
+									<option value="" >Selecione o Tempo</option>
+									<option value="00:15:00">15 minutos.</option>
+									<option value="00:30:00">30 minutos.</option>
+									<option value="00:45:00">45 minutos.</option>
+									<option value="01:00:00">1 hora.</option>
+									<option value="01:30:00">1 hora e 30 minutos.</option>
+									<option value="02:00:00">2 horas.</option>
+									<option value="02:30:00">2 horas e 30 minutos.</option>
+									<option value="03:00:00">3 horas.</option>
+									<option value="03:30:00">3 horas e 30 minutos.</option>
+									<option value="04:00:00">4 horas.</option>
+								</select>
+							</div>
+							<div class="col-xs-12 col-sm-4">
+								<button class="btn btn-block" type="submit" title="Aprovar chamado" name="update_statusfilhoid" value=""><span class="fa fa-floppy-o fa-lg"></span></button>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+				</div>
+			</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<?php require_once("footer.html"); ?>

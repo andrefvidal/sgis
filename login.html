@@ -1,0 +1,152 @@
+<?php
+	session_start();
+	//set_time_limit(0);
+	require_once("dao.php");//Funções para Objeto de acesso a dados (DAO, acrônimo de Data Access Object)
+	$go = new sql();$xo = new dao();
+	error_reporting(0);
+	if(isset($_SESSION['matr_usuario'])){header('Location: /');};
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>SGIS</title>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" type="text/css">
+	<link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon" />
+	<script src="js/jquery.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+</head>
+
+<body id="inicio" data-spy="scroll" data-target=".navbar" data-offset="60">
+
+<nav class="navbar navbar-default color-nav navbar-static-top">
+	<div class="navbar-header">
+		<a class="navbar-brand">SGIS</a>
+	</div>
+</nav>
+<div id="wrap">
+
+<?php
+if(isset($_POST['login_form']) or isset($_SESSION['usuario_form'])){
+	
+	$dominio = "@gvt.net.br";
+	$ip_server = "10.200.1.165";
+	if(isset($_SESSION['matricula'])){$matricula = $_SESSION['matricula'];}else{$matricula = $_POST['usuario_form'];}
+	if(isset($_SESSION['usuario_form'])){$usu_dominio = $_SESSION['usuario_form'];}else{$usu_dominio = $_POST['usuario_form'].$dominio;}
+	if(isset($_SESSION['senha_form'])){$senha = $_SESSION['senha_form'];}else{$senha = $_POST['senha_form'];}
+
+	if ($xo->valida_ldap($ip_server, $usu_dominio, $senha)) {
+		$valida = $go->valUsuario($matricula);
+		$primeiro_acesso = $xo->query($valida);
+		
+		if(empty($primeiro_acesso)){
+			$_SESSION['matricula'] = $matricula;
+			$_SESSION['usuario_form'] = $usu_dominio;
+			$_SESSION['senha_form'] = $senha;
+			$entries = $xo->catch_usu_ldap($ip_server, $usu_dominio, $matricula, $senha);
+			for ($i=0; $i<$entries["count"]; $i++){
+				$nome = $entries[$i]["givenname"][0];			//Nome
+				$sobrenome = $entries[$i]["sn"][0];				//Sobrenome
+				$cgo = $entries[$i]["title"][0];	            //Cargo
+				$dpt = $entries[$i]["department"][0];	    	//Setor
+				$ml_gvt = $entries[$i]["userprincipalname"][0];	//E-mail GVT
+				$mt_gvt = $entries[$i]["samaccountname"][0];	//Matricula GVT
+				$ml_tel = $entries[$i]["mail"][0];	            //E-mail Telefonica
+				$mt_tel = $entries[$i]["employeeid"][0];	    //Matricula Telefonica
+				//$comp = $entries[$i]["company"][0];	//Empresa
+				//echo $entries[$i]["memberof"][0] . "<br>";			//Membro de
+				//$nome_cpt = $entries[$i]["displayname"][0] . "<br>"; 	//Nome Completo
+			}
+			if(isset($_POST['first_login'])){
+				if(!empty($_POST['selectequipe'])){
+				$try = $go->inserUsuario($nome,$sobrenome,'1',$mt_gvt,$ml_gvt,$mt_tel,$ml_tel,$cgo,$_POST['selectequipe']);$resu = $xo->query($try);
+				session_destroy();
+				session_start();
+				$try = $go->buscarUsuario_Matricula($matricula);$to = $xo->query($try);
+				if(!empty($to))foreach($to as $mt){
+				$_SESSION['matr_usuarioid'] = $mt['idusuario'];
+				$_SESSION['matr_usuario'] = $mt['matricula_gvt'];
+				$_SESSION['matr_nome'] = $mt['nome'].' '.$mt['sobrenome'];
+				$_SESSION['matr_nivel'] = $mt['nivel'];
+				$_SESSION['matr_equipe'] = $mt['nome_equipe'];
+				$_SESSION['matr_equipeid'] = $mt['equipe'];}
+				header('Location: /');}
+			}
+			if(isset($_POST['selectsetor'])){$_SESSION['idsetor'] = $_POST['selectsetor'];}
+			if(isset($_POST['selectdepartamento'])){$_SESSION['iddepartamento'] = $_POST['selectdepartamento'];}
+			echo '
+			<div class="container">
+				<h3 class="form-signin-heading text-center">Vejo que esse é seu primeiro login. 
+				<p>Indique abaixo à qual equipe você pertence.</p></h3>
+				<div class="row">
+					<div class="col-sm-12">
+						<hr class="hr">
+					</div>
+				</div>
+					<form class="form-signin" method="post">
+					<select class="form-control" name="selectsetor" onchange="this.form.submit()">
+						<option class="form-control" value="">Selecionar Setor</option>';
+						$try = $go->buscarSetor();$resu = $xo->query($try);
+						foreach($resu as $setor){ echo '
+						<option class="form-control" value="'.$setor['idsetor'].'"'; 
+						if(isset($_SESSION['idsetor'])){if($_SESSION['idsetor'] == $setor['idsetor']){echo " selected>";}else{echo ">";}}else{echo ">";}echo $setor['nome_setor']."</option>";}
+				echo '</select>
+					</form>
+					<form class="form-signin" method="post">
+					<select class="form-control" name="selectdepartamento" onchange="this.form.submit()">
+						<option class="form-control" value="">Selecionar Departamento</option>';
+						if(isset($_SESSION['idsetor'])){$try = $go->buscarDepartamento_Setor_Id($_SESSION['idsetor']);$resu = $xo->query($try);foreach($resu as $depart){ echo '
+						<option class="form-control" value="'.$depart['iddepartamento'].'"';
+						if(isset($_SESSION['iddepartamento'])){if($_SESSION['iddepartamento'] == $depart['iddepartamento']){echo " selected>";}else{echo ">";}}else{echo ">";}echo $depart['nome_departamento']."</option>";}}
+				echo '</select>
+					</form>
+					<form class="form-signin" method="post">
+					<select class="form-control" name="selectequipe" >
+						<option class="form-control" value="">Selecionar Equipe</option>';
+						if(isset($_SESSION['iddepartamento'])){$try = $go->buscarEquipe_id($_SESSION['iddepartamento']);$resu = $xo->query($try);}
+						foreach($resu as $equipe){ echo'
+						<option class="form-control" value="'.$equipe['idequipe'].'">'.$equipe['nome_equipe'].'</option>';}
+				echo '</select>
+					<br></br>
+					<input class="btn btn-lg btn-success btn-block" type="submit" name="first_login" value="Entrar">
+					</form>
+			</div>';
+		}else{
+			$try = $go->buscarUsuario_Matricula($matricula);$to = $xo->query($try);
+			if(!empty($to))foreach($to as $mt){
+			$_SESSION['matr_usuarioid'] = $mt['idusuario'];
+			$_SESSION['matr_usuario'] = $mt['matricula_gvt'];
+			$_SESSION['matr_nome'] = $mt['nome'].' '.$mt['sobrenome'];
+			$_SESSION['matr_nivel'] = $mt['nivel'];
+			$_SESSION['matr_equipe'] = $mt['nome_equipe'];
+			$_SESSION['matr_equipeid'] = $mt['equipe'];}
+			header('Location: /');
+		}
+	}else{
+		echo "<script>alert(\"Usuário ou senha inválidos.\");</script>";
+	}
+}
+
+if(!isset($_SESSION['usuario_form'])){ echo'
+<p class="text-center" style="font-size:12px;">Esse aplicativo foi idealizado para o navegador Chrome.<br/>
+Sugerimos o dowload do plugin Chrome para Excel - <a href="https://chrome.google.com/webstore/detail/office-editing-for-docs-s/gbkeegbaiigmenfmjfclcdgdpimamgkj">Link</a>
+</p>
+<div class="container">
+	<form class="form-signin" accept-charset="UTF-8" method="post" autocomplete="on">
+		<h2 class="form-signin-heading text-center">Bem vindo. <p></p>Insira seu login.</h2>
+		<label for="inputEmail" class="sr-only">Usuário</label>
+		<input type="text" id="inputEmail" class="form-control" placeholder="Usuário" name="usuario_form" style="text-transform:uppercase" required autofocus>
+		<label for="inputPassword" class="sr-only">Senha</label>
+		<input id="inputPassword" name="senha_form" type="password" class="form-control" placeholder="Senha" required>
+        <button class="btn btn-lg btn-primary btn-block" name="login_form" type="submit">Login</button>
+	</form>
+</div>
+';}
+require_once("footer.html");
+?>

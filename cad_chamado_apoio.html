@@ -1,0 +1,99 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	//Memória do formulário
+	if(isset($_POST['selectdepartamento_cf']))if(!empty($_POST['selectdepartamento_cf']))$_POST['selectdepartamento_cf'] = $_POST['selectdepartamento_cf'];
+	if(isset($_POST['equipe_apoio']))if(!empty($_POST['equipe_apoio']))$_POST['equipe_apoio'] = $_POST['equipe_apoio'];
+	if(isset($_POST['observacao_c_f']))if(!empty($_POST['observacao_c_f']))$_POST['observacao_c_f'] = $_POST['observacao_c_f'];
+	if(isset($_POST['status_cf']))if(!empty($_POST['status_cf']))$_POST['status_cf'] = $_POST['status_cf'];
+	//FIM da Memória do formulário
+
+	//Salvando dados no BD
+	if(isset($_POST['slvChamadoFilho'])){
+		$try = $go->inserChamadoApoio($_GET['idfilho'],$_SESSION['matr_equipeid'],$_SESSION['matr_usuarioid'],$_POST['equipe_apoio'],date('Y-m-d', strtotime(date('Y-m-d').' + 2 days')),$_POST['observacao_c_f']); $to = $xo->query($try);
+		if($to === "Successfully"){
+			echo "<script>alert(\"Chamado filho salvo com sucesso.\");</script>";
+			}else{
+			echo "<script>alert(\"".$to."\");</script>";
+		}
+		unset($_POST['slvChamadoFilho']);
+		echo '<script>window.location="/update_chamado_filho.html?chamado='.$_GET['chamado'].'";</script>';
+	}
+	//FIM do Salvando dados no BD
+?>
+
+<div class="container-fluid">
+	<?php ?>
+	
+	<h1 class="form-signin-heading text-center">Cadastrar Chamado Filho</h1>
+       
+	<div class="row">
+        <div class="col-sm-12">
+        	<hr class="hr">
+        </div>
+    </div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<a class="btn btn-primary btn-sm btn-block" onClick="history.go(-1)">Voltar</a>
+		</div>
+	</div>
+	<p></p>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<form method="post" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Chamado Pai</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Responsável</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Departamento</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Equipe de apoio</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<input type="text" class="form-control" title="Chamado" placeholder="Chamado" value="<?php if(isset($_GET['chamado'])) echo $_GET['chamado'];?>" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="text" class="form-control" title="Responsável" placeholder="Responsável" value="<?php if(isset($_SESSION['matr_nome'])) echo $_SESSION['matr_nome'];?>" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" name="selectdepartamento_cf" onchange="this.form.submit()">
+				<option class="form-control" value="">Selecionar Departamento</option>
+				<?php $try = $go->buscarDepartamento();$to = $xo->query($try); if(!empty($to)){foreach($to as $depart){ echo '
+				<option class="form-control" value="'.$depart['iddepartamento'].'"';if(isset($_POST['selectdepartamento_cf']))if($_POST['selectdepartamento_cf'] == $depart['iddepartamento'])echo " selected";echo ">".$depart['nome_departamento'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" name="equipe_apoio" required>
+				<option class="form-control" value="">Selecionar Equipe</option>
+				<?php if(!empty($_POST['selectdepartamento_cf'])){
+				$try = $go->buscarEquipe_id($_POST['selectdepartamento_cf']);$to = $xo->query($try);} if(!empty($to)){foreach($to as $equipe){ echo'
+				<option class="form-control" value="'.$equipe['idequipe'].'">'.$equipe['nome_equipe'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-12"><label>Observação</label></div>
+	</div>
+	<div class="row">  
+		<div class="col-xs-12 col-sm-12" >
+			<textarea rows="2" type="text" class="form-control" name="observacao_c_f" title="Observação"><?php if(isset($_POST['observacao_c_f'])) echo $_POST['observacao_c_f'];?></textarea>
+		</div>
+	</div>
+	<div class="row">
+        <div class="col-sm-12">
+        	<hr class="hr">
+        </div>
+    </div>
+	<div class="row">    
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="slvChamadoFilho">Salvar chamado</button>
+		</div>
+	</div>
+	</form>
+	<p></p>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+		
+</div>
+
+<?php require_once("footer.html"); ?>

@@ -1,0 +1,158 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	if(isset($_GET['chamado']))if(empty($idchamado)){$idchamado = $_GET['chamado'];}
+	
+	//Consultando todos os dados do chamado
+	if(!empty($idchamado)){
+		$try = $go->buscarChamadoPai_id($idchamado);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $cmdo){ $to=0;
+			$_POST['updt_idchamado'] = $cmdo['idchamado'];				
+			$_POST['updt_chamado'] = $cmdo['chamado']; 					
+			$_POST['updt_responsavel'] = $cmdo['nome'].' '.$cmdo['sobrenome'];						
+			$_POST['updt_idstatus'] = $cmdo['idstatus'];
+			$_POST['updt_idjustificativa'] = $cmdo['idjustificativa'];
+			$_POST['updt_nomestatus'] = $cmdo['nome_status'];
+		}}
+		//Histórico do chamado Pai
+		$_POST['hist_nomestatus'] = $_POST['updt_nomestatus'];
+	}
+	
+	//Memória do formulário
+	
+	if(isset($_POST['status_cancelar']) AND !empty($_POST['status_cancelar'])){
+		$_POST['status_cancelar'] = $_POST['status_cancelar'];
+		$_POST['updt_idstatus'] = $_POST['status_cancelar'];
+		$try = $go->buscarStatus_id($_POST['status_cancelar']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $sts){$_POST['updt_nomestatus'] = $sts['nome_status'];}}$to=0;
+	}
+	if(isset($_POST['status_reabrir']) AND !empty($_POST['status_reabrir'])){
+		$_POST['status_reabrir'] = $_POST['status_reabrir'];
+		$_POST['updt_idstatus'] = $_POST['status_reabrir'];
+		$try = $go->buscarStatus_id($_POST['status_reabrir']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $sts){$_POST['updt_nomestatus'] = $sts['nome_status'];}}$to=0;
+	}
+	if(isset($_POST['justificativa_cancel']) AND !empty($_POST['justificativa_cancel']))$_POST['updt_justificativa'] = $_POST['justificativa_cancel'];
+	if(isset($_POST['justificativa_reabrir']) AND !empty($_POST['justificativa_reabrir']))$_POST['updt_justificativa'] = $_POST['justificativa_reabrir'];
+	//FIM da Memória do formulário
+	
+	//Atualizando status do chamado Pai
+	if(isset($_POST['justificativa_cancel'])){
+		$try = $go->buscarJustificativa_id($_POST['justificativa_cancel']); $to = $xo->query($try);foreach($to as $just){$nome_justificativa = $just['nome_justificativa'];}$to=0;
+	}else{
+		$try = $go->buscarJustificativa_id($_POST['justificativa_reabrir']); $to = $xo->query($try);foreach($to as $just){$nome_justificativa = $just['nome_justificativa'];}$to=0;
+	}
+	if(isset($_POST['justificativa_cancel']) OR isset($_POST['justificativa_reabrir'])){
+		if($_POST['hist_idstatus'] != $_POST['updt_idstatus']) $_POST['updt_historico'] .= 'O analista '.$_SESSION['matr_nome'].' alterou o status do chamado de '.$_POST['hist_nomestatus'].' para '.$_POST['updt_nomestatus'].' - '.date('d/m/Y H:i').PHP_EOL;
+		if(!empty($_POST['updt_justificativa']) AND $_POST['hist_justificativa'] != $_POST['updt_justificativa']) $_POST['updt_historico'] .= 'O analista '.$_SESSION['matr_nome'].' alterou a justificativa do chamado para '.$nome_justificativa.' - '.date('d/m/Y H:i').PHP_EOL;
+	}
+	
+	//Cancelamento/Reabertura de chamado 
+	if(isset($_POST['justificativa_cancel']) AND !empty($_POST['justificativa_cancel'])){
+		$try = $go->updateChamadoPai_Sts_Just($_POST['updt_idchamado'],$_POST['updt_historico'],$_POST['status_cancelar'],$_POST['updt_justificativa']); $to = $xo->query($try);
+		if($to === "Successfully"){
+			echo "<script>alert('Status do chamado atualizado com sucesso.');</script>";
+		}else{
+			echo "<script>alert(\"".$to."\");</script>";
+		}
+		unset($_POST['updtChamado']);
+		//Refresh na página
+		echo "<script>location.href='updatechamado.html?chamado=".$_POST['updt_idchamado']."';</script>";
+	}
+	if(isset($_POST['justificativa_reabrir']) AND !empty($_POST['justificativa_reabrir'])){
+		$try = $go->updateChamadoPai_Sts_Just($_POST['updt_idchamado'],$_POST['updt_historico'],$_POST['status_reabrir'],$_POST['updt_justificativa']); $to = $xo->query($try);
+		if($to === "Successfully"){
+			echo "<script>alert('Status do chamado atualizado com sucesso.');</script>";
+		}else{
+			echo "<script>alert(\"".$to."\");</script>";
+		}
+		unset($_POST['updtChamado']);
+		//Refresh na página
+		echo "<script>location.href='chamado_detalhe.html?chamado=".$_POST['updt_chamado']."';</script>";
+	}
+	//FIM do Salvando dados no BD
+?>
+
+<div class="container-fluid">
+	<?php ?>
+
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<a class="btn btn-primary btn-sm btn-block" onClick="history.go(-1)">Voltar</a>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<h1 class="text-center">Cancelamento do Chamado Pai</h1>
+	<div class="row">
+		<div class="col-xs-12 col-sm-2"></div>
+		<div class="col-xs-12 col-sm-4"><label>Status do chamado</label></div>
+		<div class="col-xs-12 col-sm-4"><label>Justificativa</label></div>
+	</div>
+	<div class="row">
+	<form method="post" autocomplete="off">
+		<div class="col-xs-12 col-sm-2"></div>
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" title="Status do chamado" name="status_cancelar" onchange="this.form.submit()" <?php if(isset($_POST['updt_responsavel']) AND $_POST['updt_responsavel'] != $_SESSION['matr_nome'] OR $_POST['hist_nomestatus'] == 'Cancelado')echo 'disabled';?>>
+				<option class="form-control" value="">Selecione o Status</option>
+				<?php $try = $go->buscarStatus_Cancelado();$to = $xo->query($try);if(!empty($to)){foreach($to as $stt){$to=0; echo'
+				<option class="form-control" value="'.$stt['idstatus'].'"';if(isset($_POST['updt_idstatus']) AND $_POST['updt_idstatus'] == $stt['idstatus'])echo ' selected';echo '>'.$stt['nome_status'].'</option>';}}
+				?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" title="Justificativa" name="justificativa_cancel" onchange="this.form.submit()" <?php if(!isset($_POST['status_cancelar']) AND $_POST['updt_responsavel'] == $_SESSION['matr_nome'] OR $_POST['updt_responsavel'] != $_SESSION['matr_nome'])echo 'disabled';if(isset($_POST['status_reabrir']) OR isset($_POST['status_cancelar']) AND $_POST['hist_nomestatus'] == 'Cancelado')echo ' required';?>>
+				<option class="form-control" value="">Selecione a Justificativa</option>';
+				<?php if(isset($_POST['status_cancelar']) OR !empty($_POST['updt_idjustificativa']) AND $_POST['updt_nomestatus'] != 'Aguardando aprovação'){
+				$try = $go->buscarJustificativa_NomeStatus($_POST['updt_nomestatus']);$to = $xo->query($try);if(!empty($to)){foreach($to as $just){ echo'
+				<option class="form-control" value="'.$just['idjustificativa'].'"';if(isset($_POST['updt_justificativa']) AND $_POST['updt_justificativa'] == $just['idjustificativa'])echo ' selected';elseif(isset($_POST['updt_idjustificativa']) AND $_POST['updt_idjustificativa'] == $just['idjustificativa'])echo ' selected'; echo '>'.$just['nome_justificativa'].'</option>';}}
+				}?>
+			</select>
+		</div>
+	</form>
+	</div>
+		
+	<h1 class="text-center">Reabertura do Chamado Pai</h1>
+	<div class="row">
+		<div class="col-xs-12 col-sm-2"></div>
+		<div class="col-xs-12 col-sm-4"><label>Status do chamado</label></div>
+		<div class="col-xs-12 col-sm-4"><label>Justificativa</label></div>
+	</div>
+	<div class="row">
+	<form method="post" autocomplete="off">
+		<div class="col-xs-12 col-sm-2"></div>
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" title="Status do chamado" name="status_reabrir" onchange="this.form.submit()" <?php if(isset($_POST['hist_nomestatus']) AND $_POST['hist_nomestatus'] != 'Cancelado' OR isset($_POST['hist_nomestatus']) AND $_POST['hist_nomestatus'] == 'Aguardando aprovação' OR $_POST['hist_nomestatus'] == 'Reprovado' AND $_POST['updt_responsavel'] == $_SESSION['matr_nome'] OR $_POST['updt_responsavel'] != $_SESSION['matr_nome'])echo 'disabled';?>>
+				<option class="form-control" value="">Selecione o Status</option>
+				<?php $try = $go->buscarStatus_Reabrir();$to = $xo->query($try);if(!empty($to)){foreach($to as $stt){$to=0; echo'
+				<option class="form-control" value="'.$stt['idstatus'].'"';if(isset($_POST['updt_idstatus']) AND $_POST['updt_idstatus'] == $stt['idstatus'])echo ' selected';echo '>'.$stt['nome_status'].'</option>';}}
+				?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" title="Justificativa" name="justificativa_reabrir" onchange="this.form.submit()" <?php if(!isset($_POST['status_reabrir']) AND $_POST['updt_responsavel'] == $_SESSION['matr_nome'] OR $_POST['updt_responsavel'] != $_SESSION['matr_nome'])echo 'disabled';if(isset($_POST['status_reabrir']) OR isset($_POST['status_cancelar']) AND $_POST['hist_nomestatus'] == 'Cancelado')echo ' required';?>>
+				<option class="form-control" value="">Selecione a Justificativa</option>';
+				<?php if(isset($_POST['status_reabrir']) OR !empty($_POST['updt_idjustificativa']) AND $_POST['updt_nomestatus'] != 'Cancelado'){
+				$try = $go->buscarJustificativa_NomeStatus($_POST['updt_nomestatus']);$to = $xo->query($try);if(!empty($to)){foreach($to as $just){ echo'
+				<option class="form-control" value="'.$just['idjustificativa'].'"';if(isset($_POST['updt_justificativa']) AND $_POST['updt_justificativa'] == $just['idjustificativa'])echo ' selected';elseif(isset($_POST['updt_idjustificativa']) AND $_POST['updt_idjustificativa'] == $just['idjustificativa'])echo ' selected'; echo '>'.$just['nome_justificativa'].'</option>';}}
+				}?>
+			</select>
+		</div>
+	</form>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+</div>
+
+<?php require_once("footer.html"); ?>

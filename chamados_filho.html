@@ -1,0 +1,109 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	//Limpa as variáveis da memória.
+	unset($_SESSION['updateformcf']);
+	//Memória do formulário de filtro
+	if(isset($_POST['flt_cl_fl']))if(!empty($_POST['flt_cl_fl']))$_SESSION['flt_cl_fl'] = $_POST['flt_cl_fl'];
+	if(isset($_POST['flt_cl_fl_or']))if(!empty($_POST['flt_cl_fl_or']))$_SESSION['flt_cl_fl_or'] = $_POST['flt_cl_fl_or'];
+	if(isset($_POST['flt_cl_flo']))if(!empty($_POST['flt_cl_flo']))$_SESSION['flt_cl_flo'] = $_POST['flt_cl_flo'];
+	if(isset($_POST['flt_cl_flo_or']))if(!empty($_POST['flt_cl_flo_or']))$_SESSION['flt_cl_flo_or'] = $_POST['flt_cl_flo_or'];
+?>
+
+<div class="container-fluid">
+
+	<div class="col-xs-12 col-sm-12" style="margin-bottom:20px;">
+		<h1 class="form-signin-heading text-center">Chamados Filhos - Equipe <?php echo $_SESSION['matr_equipe'];?></h1>
+	</div>
+	
+	<div class="row">
+		<div class="col-xs-12 col-sm-7">
+			<label>Atividade:</label>
+			<a href="#" class="btn btn-sq-xs btn-info" disabled></a>
+			<label>Aguardando execução |</label>
+			<a href="#" class="btn btn-sq-xs btn-success" disabled></a>
+			<label>Aguardando Agendamento |</label>
+			<a href="#" class="btn btn-sq-xs btn-warning" disabled></a>
+			<label>Aguardando Aprovação |</label>
+		</div>
+		<div class="col-xs-12 col-sm-5">
+			<form method="POST" action="">
+			<label>Filtro:</label>
+			<select name="flt_cl_flo" onchange="this.form.submit()"><?php echo'
+				<option value="nome"';if(isset($_SESSION['flt_cl_flo']) AND $_SESSION['flt_cl_flo'] == 'nome') echo ' selected';echo'>Analista Responsável</option>
+				<option value="requisitante"';if(isset($_SESSION['flt_cl_flo']) AND $_SESSION['flt_cl_flo'] == 'requisitante') echo ' selected';echo'>Área Requisitante</option>
+				<option value="chamado"';if(isset($_SESSION['flt_cl_flo']) AND $_SESSION['flt_cl_flo'] == 'chamado') echo ' selected';echo'>Chamado Pai</option>
+				<option value="cronograma_pcp"';if(isset($_SESSION['flt_cl_flo']) AND $_SESSION['flt_cl_flo'] == 'cronograma_pcp') echo ' selected';echo'>Cronograma PCP</option>
+				<option value="data_entrega_c_p"';if(isset($_SESSION['flt_cl_flo']) AND $_SESSION['flt_cl_flo'] == 'data_entrega_c_p') echo ' selected';echo'>Praza de Entrega</option>
+				<option value="nome_prioridade"';if(isset($_SESSION['flt_cl_flo']) AND $_SESSION['flt_cl_flo'] == 'nome_prioridade') echo ' selected';echo'>Prioridade</option>
+				<option value="status_pai"';if(isset($_SESSION['flt_cl_flo']) AND $_SESSION['flt_cl_flo'] == 'status_pai') echo ' selected';echo'>Status do Chamado</option>
+				<option value="tempo_execucao"';if(isset($_SESSION['flt_cl_flo']) AND $_SESSION['flt_cl_flo'] == 'tempo_execucao') echo ' selected';echo'>Tempo da Atividade</option>
+				<option value="vencimento"';if(isset($_SESSION['flt_cl_flo']) AND $_SESSION['flt_cl_flo'] == 'vencimento') echo ' selected';echo'>Vencimento</option>
+			</select>
+			<select name="flt_cl_flo_or" onchange="this.form.submit()">
+				<option value="ASC"';if(isset($_SESSION['flt_cl_flo_or']) AND $_SESSION['flt_cl_flo_or'] == 'ASC') echo ' selected';echo'>Crescente</option>
+				<option value="DESC"';if(isset($_SESSION['flt_cl_flo_or']) AND $_SESSION['flt_cl_flo_or'] == 'DESC') echo ' selected';echo'>Decrescente</option>
+			</select>';?>
+			</form>
+		</div>
+		<div class="col-xs-12 col-sm-12" style="margin-top:-15px;margin-bottom:-15px;">
+           	<hr class="hr">
+		</div>
+	</div>
+	
+	<div class="row">  
+	<div class="col-xs-12 col-sm-12" >
+	<div class="table-responsive">          
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th class="text-center">Chamado Pai</th>
+					<th class="text-center">Área Requisitante</th>
+					<th class="text-center">Autor Projeto</th>
+					<th class="text-center">Vencimento</th>
+					<th class="text-center">Status</th>
+					<th class="text-center">Prioridade</th>
+					<th class="text-center">Prazo de Entrega</th>
+					<th class="text-center">Cronograma PCP</th>
+					<th class="text-center">Tempo da Atividade</th>
+					<th class="text-center">Analista Responsável</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php $try = $go->buscarChamadoFilho_Equipe($_SESSION['matr_equipe'],$_SESSION['flt_cl_flo'],$_SESSION['flt_cl_flo_or']);$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $cmdof){ echo'
+				<tr'; 
+				if(empty($cmdof['cronograma_pcp']) AND $cmdof['status_pai'] !== 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Alta") !== false OR empty($cmdof['cronograma_pcp']) AND $cmdof['status_pai'] !== 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Urgente") !== false){echo ' class="success" style="color:red";';}
+				elseif(empty($cmdof['cronograma_pcp']) AND $cmdof['status_pai'] !== 'Aguardando aprovação'){echo ' class="success"';}
+				
+				if(date('Y-m-d') == $cmdof['vencimento'] AND $cmdof['status_pai'] == 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Alta") !== false OR date('Y-m-d') == $cmdof['vencimento'] AND $cmdof['status_pai'] == 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Urgente") !== false){echo ' class="warning" style="color:red";';}elseif(date('Y-m-d') == $cmdof['vencimento'] AND $cmdof['status_pai'] == 'Aguardando aprovação'){echo ' class="warning"';}
+				elseif(date('Y-m-d') < $cmdof['vencimento'] AND $cmdof['status_pai'] == 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Alta") !== false OR date('Y-m-d') < $cmdof['vencimento'] AND $cmdof['status_pai'] == 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Urgente") !== false){echo ' class="warning" style="color:red";';}elseif(date('Y-m-d') < $cmdof['vencimento'] AND $cmdof['status_pai'] == 'Aguardando aprovação'){echo ' class="warning";';}
+				elseif(date('Y-m-d') > $cmdof['vencimento'] AND $cmdof['status_pai'] == 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Alta") !== false OR date('Y-m-d') > $cmdof['vencimento'] AND $cmdof['status_pai'] == 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Urgente") !== false){echo ' class="warning" style="color:red";';}elseif(date('Y-m-d') > $cmdof['vencimento'] AND $cmdof['status_pai'] == 'Aguardando aprovação'){echo ' class="warning";';}
+				
+				if(!empty($cmdof['cronograma_pcp']) AND date('Y-m-d') == $cmdof['cronograma_pcp'] AND $cmdof['nome_status'] !== 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Alta") !== false OR !empty($cmdof['cronograma_pcp']) AND date('Y-m-d') == $cmdof['cronograma_pcp'] AND $cmdof['nome_status'] !== 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Urgente") !== false){echo ' class="info" style="color:red";';}elseif(!empty($cmdof['cronograma_pcp']) AND date('Y-m-d') == $cmdof['cronograma_pcp']){echo ' class="info"';}
+				elseif(!empty($cmdof['cronograma_pcp']) AND date('Y-m-d') < $cmdof['cronograma_pcp'] AND $cmdof['nome_status'] !== 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Alta") !== false OR !empty($cmdof['cronograma_pcp']) AND date('Y-m-d') < $cmdof['cronograma_pcp'] AND $cmdof['nome_status'] !== 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Urgente") !== false){echo ' class="info" style="color:red";';}elseif(!empty($cmdof['cronograma_pcp']) AND date('Y-m-d') < $cmdof['cronograma_pcp']){echo ' class="info"';}
+				elseif(!empty($cmdof['cronograma_pcp']) AND date('Y-m-d') > $cmdof['cronograma_pcp'] AND $cmdof['nome_status'] !== 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Alta") !== false OR !empty($cmdof['cronograma_pcp']) AND date('Y-m-d') > $cmdof['cronograma_pcp'] AND $cmdof['nome_status'] !== 'Aguardando aprovação' AND strpos($cmdof['nome_prioridade'],"Urgente") !== false){echo ' class="info" style="color:red";';}elseif(!empty($cmdof['cronograma_pcp']) AND date('Y-m-d') > $cmdof['cronograma_pcp']){echo ' class="info"';}
+				echo'>
+					<td class="text-center"><form method="GET" action="/chamado_detalhe.html" target="_blank"><input type="submit" id="'.$cmdof['chamado'].'cf'.'" name="chamado" value="'.$cmdof['chamado'].'" style="display:none;"/><a style="cursor: pointer" onclick="$(\'#'.$cmdof['chamado'].'cf'.'\').click();">'.$cmdof['chamado'].'</a></input></form></td>
+					<td class="text-center">'.$cmdof['requisitante'].'</td>
+					<td class="text-center">'.$cmdof['autor'].'</td>
+					<td class="text-center">';if(!empty($cmdof['vencimento']))echo $xo->sql_to_br($cmdof['vencimento']); echo'</td>
+					<td class="text-center">';if(!empty($cmdof['nome_status']))echo $cmdof['nome_status'];else echo $cmdof['status_pai']; echo'</td>
+					<td class="text-center">'.$cmdof['nome_prioridade'].'</td>
+					<td class="text-center">';if(!empty($cmdof['data_entrega_c_p']))echo $xo->sql_to_br($cmdof['data_entrega_c_p']); echo'</td>
+					<td class="text-center">';if(!empty($cmdof['cronograma_pcp']))echo $xo->sql_to_br($cmdof['cronograma_pcp']); echo'</td>
+					<td class="text-center">'.$cmdof['tempo_execucao'].'</td>
+					<td class="text-center">'.$cmdof['nome'].' '.$cmdof['sobrenome'].'</td>
+				</tr>
+			';}}?>
+			</tbody>
+		</table>
+	</div>
+	</div>
+	</div>
+
+	<div class="col-xs-12 col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+</div>
+<?php
+	require_once("footer.html");
+?>

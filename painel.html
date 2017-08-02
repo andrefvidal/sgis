@@ -1,0 +1,136 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+?>
+	
+<div class="container-fluid">
+
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+		<div class="text-center">
+			<h1>Manutenção das tabelas</h1>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Pais Estado Cidade" onclick="window.location='/pais-estado-cidade.html';">
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Prioridade" onclick="window.location='/prioridade.html';">
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Setor Departo Equipe" onclick="window.location='/setor-depart-equipe.html';">
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Status" onclick="window.location='/status.html';">
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Tipo" onclick="window.location='/tipo.html';">
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Justificativa" onclick="window.location='/justificativa.html';">
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="SLA" onclick="window.location='/sla.html';">
+		</div>
+	</div>
+	<div class="row">
+        <div class="col-sm-12">
+        	<hr class="hr">
+        </div>
+		<div class="text-center">
+			<h1>Manutenção dos Controles</h1>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Controle Chamado" onclick="window.location='/controle_chamado.html';">
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Fluxograma Pai" onclick="window.location='/fluxograma_pai.html';">
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Fluxograma Apoio" onclick="window.location='/fluxograma_apoio.html';">
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4">
+			<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Atualizar Agenda" onclick="window.location='/atualizar_agenda.html';">
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:30px;margin-bottom:30px;"></div>
+	<div class="row">
+        <div class="col-sm-12">
+        	<hr class="hr">
+        </div>
+	</div>
+	<div class="row">
+		<div class="text-center">
+			<h1>Manutenção dos usuários</h1>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<?php 
+		if(isset($_POST['selected_usuario']))if(!empty($_POST['selected_usuario'])){
+			$_POST['selected_usuario'] = $_POST['selected_usuario'];
+			$try = $go->buscarUsuarioNivel_Id_Sobrenome($_POST['selected_usuario']);$to = $xo->query($try);
+			if(!empty($to)){foreach($to as $id){$_POST['idusuario'] = $id['id'];}}
+		}
+	?>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4">
+		<form method="post">
+			<input class="form-control" type="text" list="users" name="selected_usuario" title="Usuário" placeholder="Digite o usuário desejado." value="<?php if(isset($_POST['selected_usuario']))echo $_POST['selected_usuario'];?>" onselect="this.form.submit()" onchange="this.form.submit()" onkeypress="return event.keyCode != 13;" <?php if($_SESSION['matr_nivel'] != 3)echo 'disabled';?> required>
+			<datalist id="users">
+			<?php $try = $go->buscarUsuarios();$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $usu){ echo'
+				<option value="'.$usu['nome'].' '.$usu['sobrenome'].'">';}
+			}?>
+			</datalist>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" name="usu_novo_nivel" required>
+				<option class="form-control" value="">Selecionar Nível</option>
+				<?php if(isset($_POST['selected_usuario'])){
+					$try = $go->buscarUsuarioNivel_Id_Sobrenome($_POST['selected_usuario']);$to = $xo->query($try);
+					if(!empty($to)){foreach($to as $usuario){
+						if($usuario['nivel'] == '1'){echo '<option class="form-control" value="1" selected>Usuário</option><option class="form-control" value="2">Administrador</option><option class="form-control" value="3">Gerente</option>';}
+						elseif($usuario['nivel'] == '2'){echo '<option class="form-control" value="1">Usuário</option><option class="form-control" value="2" selected>Administrador</option><option class="form-control" value="3">Gerente</option>';}
+						elseif($usuario['nivel'] == '3'){echo '<option class="form-control" value="1">Usuário</option><option class="form-control" value="2">Administrador</option><option class="form-control" value="3" selected>Gerente</option>';}
+					}}}?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<button class="btn btn-success btn-block" type="submit" <?php if($_SESSION['matr_nivel'] != 3)echo 'disabled';?> name="troca_nivel">Alterar</button>
+		</div>
+		</form>
+		<?php 
+		if(isset($_POST['troca_nivel'])){
+			$try = $go->updateUsuario_nivel($_POST['idusuario'],$_POST['usu_novo_nivel']); 
+			$to = $xo->query($try); 
+			if($to === "Successfully"){
+					echo "<script>alert('Usuário atualizado com sucesso.');</script>";
+				}
+				$to = 0; unset($_POST['troca_nivel']);
+				//Refresh na página
+				echo "<script>location.href='painel.html';</script>";
+		}
+		?>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+</div>	
+
+
+<?php
+	require_once("footer.html");
+?>

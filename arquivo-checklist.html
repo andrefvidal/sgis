@@ -1,0 +1,120 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	//Memória do formulário
+	if(isset($_POST['titulo']))if(!empty($_POST['titulo']))$_SESSION['ck_titulo'] = $_POST['titulo'];
+	if(isset($_POST['palavrachave']))if(!empty($_POST['palavrachave']))$_SESSION['ck_palavrachave'] = $_POST['palavrachave'];
+	if(isset($_POST['descricao']))if(!empty($_POST['descricao']))$_SESSION['ck_descricao'] = $_POST['descricao'];
+	
+	if(isset($_POST['slvArquivoBtc'])){
+	// Recupera os dados dos campos
+	$upfile = $_FILES["arq"];
+	
+		// Verifica se arquivo foi selecionada
+		if (!empty($upfile["name"])) 
+		{
+			$error = array();
+			// Tamanho máximo do arquivo em bytes
+			$tamanho = 50000000;
+			// Verifica se o arquivo é uma texto ou planilha
+			if(!preg_match("/\.(doc|docx|pdf|xls|xlsx|txt|html){1}$/i", $upfile["name"])){
+				$error[1] = "<script>alert(\"Certifique-se que esse é um arquivo de texto, planilha ou html.\");</script>";}
+			// Verifica se o tamanho do arquivo é maior que o tamanho permitido
+			if($upfile["size"] > $tamanho) { $error[2] =  "<script>alert(\"O tamanho do arquivo deve ser de no máximo 50 Mbytes\");</script>";}
+			// Se não houver nenhum erro
+			if (count($error) == 0) {
+				// Pega extensão do arquivo
+				preg_match("/\.(doc|docx|pdf|xls|xlsx|txt|html){1}$/i", $upfile["name"], $ext);
+				// Gera um nome único para o arquivo
+				$ext_arquivo = $ext[1];
+				// Caminho de onde ficará o arquivo
+				$caminho_arquivo = "checklist/" . $upfile["name"];
+				// Insere os dados no banco
+				$try = $go->inserArquivoChecklist($_SESSION['ck_titulo'], $_SESSION['ck_palavrachave'], $_SESSION['ck_descricao'], $upfile["name"],$caminho_arquivo,$upfile["size"],$ext_arquivo,$_SESSION['matr_nome'],$_SESSION['matr_usuarioid']); $to = $xo->query($try);
+				// Se os dados forem inseridos com sucesso
+				if($to === "Successfully"){
+					// Faz o upload do arquivo para seu respectivo caminho
+					move_uploaded_file($upfile["tmp_name"], $caminho_arquivo);
+					echo "<script>alert(\"Arquivo salvo com sucesso.\");</script>";$to = 0;$try = 0;
+				} 
+			}elseif (count($error) != 0) {// Se houver mensagens de erro, exibe-as
+				foreach ($error as $erro) {
+					echo $erro;
+				}
+			}
+		}
+	}
+?>
+
+<div id="arquivo" class="container-fluid">
+
+    <div class="row">
+    	<div class="text-center">
+    		<h1>Cadastrar Novo Checklist</h1>
+        </div>
+    </div>
+    <div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+        <div class="col-sm-12">
+        	<hr class="hr">
+        </div>
+    </div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<form action="<?php echo $_SERVER['PHP_SELF'];?>" enctype="multipart/form-data" method="post" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-4">
+			<label>Título do Checklist</label>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<label>Palavras-chaves</label>
+		</div>
+	</div>
+	<div class="row">  
+		<div class="col-xs-12 col-sm-4">
+			<input type="text" class="form-control" name="titulo" title="Título" placeholder="Título" value="<?php if(isset($_SESSION['ck_titulo'])) echo $_SESSION['ck_titulo'];?>"></input>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<input type="text" class="form-control" name="palavrachave" title="Palavras-chaves do documento" placeholder="Palavras-chaves do documento." value="<?php if(isset($_SESSION['ck_palavrachave'])) echo $_SESSION['ck_palavrachave'];?>"></input>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-12">
+			<label>Descrição do Checklist</label>
+		</div>
+	</div>
+	<div class="row">  
+		<div class="col-xs-12 col-sm-12">
+			<textarea rows="2" type="text" class="form-control" name="descricao" title="Descrição do procedimento" onchange="this.form.submit()"><?php if(isset($_SESSION['ck_descricao'])) echo $_SESSION['ck_descricao'];?></textarea>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-12">
+			<label>Arquivo</label>
+		</div>
+	</div>
+	<div class="row">  
+		<div class="col-xs-12 col-sm-6">
+			<input type="hidden" name="MAX_FILE_SIZE" value="10000000"/>
+			<input type="file" class="form-control" name="arq" placeholder="Inserir Arquivo" required/>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">    
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="slvArquivoBtc">Salvar chamado</button>
+		</div>
+	</div>
+	</form>
+	
+	<div class="row">
+        <div class="col-sm-12">
+        	<hr class="hr">
+        </div>
+    </div>
+</div>
+
+<?php
+	require_once("footer.html");
+?>

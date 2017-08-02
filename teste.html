@@ -1,0 +1,138 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+		
+
+?>
+
+<div class="container-fluid">
+	<?php print_r($_POST);?>
+
+	<form method="post" action="#pcp" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-9"><p class="text-right">Alterar a caixa de entrada do chamado:</p></div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Escolha a matrícula desejada." name="responsavel" <?php if(!empty($_POST['responsavel']))if($_POST['responsavel'] != $_SESSION['matr_usuarioid'] OR $_POST['updt_nomestatusfilho'] == 'Concluído' OR $_POST['updt_nomestatuspai'] != 'Aprovado' AND $_SESSION['matr_nivel'] != 3) echo 'readonly';elseif($_POST['updt_nomestatuspai'] != 'Aprovado')echo ' disabled';?>>
+				<option class="form-control" value="">Aguardando Aprovação</option>
+				<?php if(!empty($_POST['updte_nome_respon']) AND $_POST['updte_nome_respon'] !== $_SESSION['matr_nome']){echo '
+				<option class="form-control" value="" selected>'.$_POST['updte_nome_respon'].'</option>';}
+				elseif(!empty($_POST['updte_nome_respon']) OR isset($_POST['idstatuspai'])){
+					$try = $go->buscarUsuario_Equipe($_SESSION['matr_equipe']);$to = $xo->query($try);if(!empty($to)){foreach($to as $mt){ echo'
+				<option class="form-control" value="'.$mt['idusuario'].'"';if(isset($_POST['responsavel']) AND $_POST['responsavel'] == $mt['idusuario'])echo ' selected';elseif($_SESSION['matr_nome'] == $mt['nome'].' '.$mt['sobrenome']) echo ' selected';echo '>'.$mt['nome'].' '.$mt['sobrenome'].'</option>';}}
+				}?>
+			</select>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Previsão Logistica</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Prazo para Agendamento</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Prazo de Entrega</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Cronograma PCP</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" id="lmtmtrpcp" title="Previsão Logistica" placeholder="Previsão Logistica" value="<?php if(isset($_POST['lmtmtr_pcp']))echo $_POST['lmtmtr_pcp'];?>" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" id="limitepcp" name="limite_pcp" title="Prazo para Agendamento" placeholder="Prazo para Agendamento" value="<?php if(isset($_POST['limite_pcp']))echo $_POST['limite_pcp'];?>" OnKeyUp="formataData(this)" >
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" title="Data de Entrega" value="<?php if(isset($_POST['data_entrega']))echo $_POST['data_entrega'];?>" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" id="crongmpcp" name="crongm_pcp" title="Cronograma PCP" placeholder="Cronograma PCP" value="<?php if(isset($_POST['crongm_pcp']))echo $_POST['crongm_pcp'];?>" OnKeyUp="formataData(this)" />
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Horário da Atividade</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Tempo de Execução</label></div>
+		<div class="col-xs-12 col-sm-3"><label>RDM</label></div>
+		<div class="col-xs-12 col-sm-3"><label>RDM Status</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<select type="text" class="form-control" name="horario_turno" title="Horário da Atividade" >
+				<option value="Diurno (8:30-12:00)" <?php if(isset($_POST['horario_turno']))if($_POST['horario_turno'] == 'Diurno (8:30-12:00)')echo 'selected';?>>Diurno (8:30-12:00)</option>
+				<option value="Diurno (14:00-18:00)" <?php if(isset($_POST['horario_turno']))if($_POST['horario_turno'] == 'Diurno (14:00-18:00)')echo 'selected';?>>Diurno (14:00-18:00)</option>
+				<option value="Noturno (00:00-06:00)" <?php if(isset($_POST['horario_turno']))if($_POST['horario_turno'] == 'Noturno (00:00-06:00)')echo 'selected';?>>Noturno (00:00-06:00)</option>
+				<option value="Noturno (02:00-06:00)" <?php if(isset($_POST['horario_turno']))if($_POST['horario_turno'] == 'Noturno (02:00-06:00)')echo 'selected';?>>Noturno (02:00-06:00)</option>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select type="text" class="form-control" name="tempo_execucao" title="Tempo de Execução" >
+				<option value="00:15:00" <?php if(isset($_POST['tempo_execucao']))if($_POST['tempo_execucao'] == '00:15:00')echo 'selected';?>>15 minutos.</option>
+				<option value="00:30:00" <?php if(isset($_POST['tempo_execucao']))if($_POST['tempo_execucao'] == '00:30:00')echo 'selected';?>>30 minutos.</option>
+				<option value="00:45:00" <?php if(isset($_POST['tempo_execucao']))if($_POST['tempo_execucao'] == '00:45:00')echo 'selected';?>>45 minutos.</option>
+				<option value="01:00:00" <?php if(isset($_POST['tempo_execucao']))if($_POST['tempo_execucao'] == '01:00:00')echo 'selected';?>>1 hora.</option>
+				<option value="01:30:00" <?php if(isset($_POST['tempo_execucao']))if($_POST['tempo_execucao'] == '01:30:00')echo 'selected';?>>1 hora e 30 minutos.</option>
+				<option value="02:00:00" <?php if(isset($_POST['tempo_execucao']))if($_POST['tempo_execucao'] == '02:00:00')echo 'selected';?>>2 horas.</option>
+				<option value="02:30:00" <?php if(isset($_POST['tempo_execucao']))if($_POST['tempo_execucao'] == '02:30:00')echo 'selected';?>>2 horas e 30 minutos.</option>
+				<option value="03:00:00" <?php if(isset($_POST['tempo_execucao']))if($_POST['tempo_execucao'] == '03:00:00')echo 'selected';?>>3 horas.</option>
+				<option value="03:30:00" <?php if(isset($_POST['tempo_execucao']))if($_POST['tempo_execucao'] == '03:30:00')echo 'selected';?>>3 horas e 30 minutos.</option>
+				<option value="04:00:00" <?php if(isset($_POST['tempo_execucao']))if($_POST['tempo_execucao'] == '04:00:00')echo 'selected';?>>4 horas.</option>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="text" class="form-control" maxlength="6" name="rdm" title="RDM" placeholder="RDM" value="<?php if(isset($_POST['rdm']))echo $_POST['rdm'];?>" />
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" name="rdm_status" title="RDM Status" >
+				<option class="form-control" value="">Escolha o Status da RDM</option>
+				<option class="form-control" value="Aprovada" <?php if($_POST['rdm_status'] == 'Aprovada') echo 'selected';?>>Aprovada</option>
+				<option class="form-control" value="Aguardando abertura" <?php if($_POST['rdm_status'] == 'Aguardando abertura') echo 'selected';?>>Aguardando abertura</option>
+				<option class="form-control" value="Aguardando aprovação" <?php if($_POST['rdm_status'] == 'Aguardando aprovação') echo 'selected';?>>Aguardando aprovação</option>
+				<option class="form-control" value="Recusada" <?php if($_POST['rdm_status'] == 'Recusada') echo 'selected';?>>Recusada</option>
+			</select>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Status do chamado Filho</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Data Resolução</label></div>
+		<div class="col-xs-12 col-sm-6"><label>Técnico de Campo</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Status do chamado" name="idstatusfilho" onchange="this.form.submit()" >
+				<option class="form-control" value="">Status do chamado Filho</option>
+				<?php if($_POST['updt_nomestatusfilho'] !== 'Concluído' OR $_SESSION['matr_nivel'] == 3){
+				if($_SESSION['matr_equipe'] == 'PCP'){ $try = $go->buscarStatus_PCP();$to = $xo->query($try);}
+				else{$try = $go->buscarStatus_Filho();$to = $xo->query($try);}if(!empty($to)){foreach($to as $stt){$to=0; echo'
+				<option class="form-control" value="'.$stt['idstatus'].'"';if(isset($_POST['updt_idstatusfilho']) AND $_POST['updt_idstatusfilho'] == $stt['idstatus'])echo ' selected';echo '>'.$stt['nome_status'].'</option>';}}}?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" id="data_resol" class="form-control" name="d_resolucao" title="Data Resolução" value="<?php if(isset($_POST['updt_nomestatusfilho']) AND $_POST['updt_nomestatusfilho'] == 'Concluído'){echo date("Y-m-d");}elseif(!empty($_POST['d_resolucao'])){echo $_POST['d_resolucao'];}?>" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-6">
+			<input type="text" class="form-control" name="tc_campo" title="Técnico de Campo" placeholder="Técnico de Campo" value="<?php if(isset($_POST['tc_campo']))echo $_POST['tc_campo'];?>" >
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-12"><label>Observação</label></div>
+	</div>
+	<div class="row">  
+		<div class="col-xs-12 col-sm-12">
+			<textarea rows="2" type="text" class="form-control" name="observacao" title="Observação" 
+			><?php if(isset($_POST['observacao'])) echo $_POST['observacao'];?></textarea>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">    
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="updtChamadoFilho" >Atualizar chamado Filho</button>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>		
+	</form>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+</div>
+
+<?php require_once("footer.html"); ?>

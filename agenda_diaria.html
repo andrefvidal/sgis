@@ -1,0 +1,120 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	//Memória do formulário
+	if(isset($_POST['selectdepartamento_agd']))if(!empty($_POST['selectdepartamento_agd'])){$_SESSION['selectdepartamento_agd'] = $_POST['selectdepartamento_agd'];}
+	if(isset($_POST['selectequipe']))if(!empty($_POST['selectequipe'])){$_SESSION['selectequipe'] = $_POST['selectequipe'];};
+	if(isset($_POST['data_agenda']))if(!empty($_POST['data_agenda'])){$_SESSION['data_agenda'] = $_POST['data_agenda'];};
+?>
+
+<div class="container-fluid">
+
+	<h1 class="form-signin-heading text-center">Consultar Diária</h1>
+
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<form method="post" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<label>Departamento</label>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<label>Equipe</label>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<label>Data</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" name="selectdepartamento_agd" onchange="this.form.submit()">
+				<option class="form-control" value="">Selecionar Departamento</option>';
+				<?php $try = $go->buscarDepartamento();$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $depart){ echo '
+				<option class="form-control" value="'.$depart['iddepartamento'].'"';
+				if(isset($_SESSION['selectdepartamento_agd'])){if($_SESSION['selectdepartamento_agd'] == $depart['iddepartamento']){echo " selected>";}
+				else{echo ">";}}else{echo ">";}echo $depart['nome_departamento'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" name="selectequipe" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Selecionar Equipe</option>
+				<?php if(isset($_SESSION['selectdepartamento_agd'])){
+				$try = $go->buscarEquipe_id($_SESSION['selectdepartamento_agd']);$to = $xo->query($try);}
+				if(!empty($to)){foreach($to as $equipe){ echo'				
+				<option class="form-control" value="'.$equipe['nome_equipe'].'"';
+				if(isset($_SESSION['selectdepartamento_agd']) AND $_SESSION['selectequipe'] == $equipe['nome_equipe'])echo " selected";echo ">".$equipe['nome_equipe'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" id="dataagenda" name="data_agenda" title="Data da Agenda" placeholder="Data da Agenda" value="<?php if(isset($_SESSION['data_agenda']))echo $_SESSION['data_agenda'];?>" required>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="consultar">Consultar</button>
+		</div>
+	</div>
+	
+	</form>
+	<p></p>
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-nowrap text-center">Chamado</th>
+				<th class="text-nowrap text-center">Área</th>
+				<th class="text-nowrap text-center">Atividade</th>
+				<th class="text-nowrap text-center">Nome do Projeto</th>
+				<th class="text-nowrap text-center">Cidade</th>
+				<th class="text-nowrap text-center">Cronograma</th>
+				<th class="text-nowrap text-center">RDM</th>
+				<th class="text-nowrap text-center">Status RDM</th>
+				<th class="text-nowrap text-center">Tempo de Execução</th>
+				<th class="text-nowrap text-center">Prioridade</th>
+				<th class="text-nowrap text-center">Horário</th>
+				<th class="text-nowrap text-center">Técnico de Campo</th>
+			</tr>
+		</thead>
+		<?php
+			if(strtotime(date('Y-m-d')) > strtotime($_SESSION['data_agenda'])){
+				$try = $go->buscarAgenda_Equipe_Data_Passado($_POST['selectequipe'],$_SESSION['data_agenda']);$to = $xo->query($try);
+			}else{
+				$try = $go->buscarAgenda_Equipe_Data_Validacao($_POST['selectequipe'],$_SESSION['data_agenda']);$to = $xo->query($try);
+			}if(!empty($to))echo '<tbody style="margin-top:5px;" class="tbodyboot">';
+			if(!empty($to)){foreach($to as $cmdo){ echo '
+				<tr>
+					<td class="text-center"><form method="GET" action="/chamado_detalhe.html" target="_blank"><input type="submit" id="'.$cmdo['chamado'].'cf'.'" name="chamado" value="'.$cmdo['chamado'].'" style="display:none;"/><a style="cursor: pointer" onclick="$(\'#'.$cmdo['chamado'].'cf'.'\').click();">'.$cmdo['chamado'].'</a></input></form></td>
+					<td class="text-nowrap text-center">'.$cmdo['nome_equipe'].'</td>
+					<td class="text-nowrap text-center">'.$cmdo['nome_tipo'].'</td>
+					<td class="text-center"><form action="'.$cmdo['caminho'].'" target="_blank"><input type="submit" id="'.$cmdo['chamado'].'prj'.'" style="display:none;"/><a style="cursor: pointer" onclick="$(\'#'.$cmdo['chamado'].'prj'.'\').click();">'.$cmdo['nome_projeto'].'</a></input></form></td>
+					<td class="text-nowrap text-center">'.$cmdo['nome_cidade'].'</td>
+					<td class="text-nowrap text-center info">';
+					if($passado == 1 AND !empty($cmdo['data_agenda'])) echo $xo->sql_to_br($cmdo['data_agenda']);elseif(!empty($cmdo['cronograma_pcp']) AND $cmdo['cronograma_pcp'] == $_SESSION['data_agenda'])echo $xo->sql_to_br($cmdo['cronograma_pcp']);else echo $xo->sql_to_br($cmdo['cronograma_pcp_bkp']) ; echo '</td>
+					<td class="text-nowrap text-center">';
+					if($passado == 1) echo $cmdo['rdm_agenda'];elseif(!empty($cmdo['cronograma_pcp']) AND $cmdo['cronograma_pcp'] == $_SESSION['data_agenda'])echo $cmdo['rdm'];else echo $cmdo['rdm_bkp']; echo '</td>
+					<td class="text-nowrap text-center">';
+					if($passado == 1) echo $cmdo['status_rdm_agenda'];elseif(!empty($cmdo['cronograma_pcp']) AND $cmdo['cronograma_pcp'] == $_SESSION['data_agenda'])echo $cmdo['rdm_status'];else echo $cmdo['rdm_status_bkp']; echo '</td>
+					<td class="text-nowrap text-center">'.$cmdo['tempo_execucao'].'</td>
+					<td class="text-nowrap text-center">'.$cmdo['nome_prioridade'].'</td>
+					<td class="text-nowrap text-center">'.$cmdo['horario_turno'].'</td>
+					<td class="text-nowrap text-center">';
+					if($passado == 1) echo $cmdo['tecnico_campo_agenda'];else echo $cmdo['tecnico_campo']; echo '</td>
+				</tr>';}
+			};if(!empty($to))echo '</tbody>';
+
+		?>
+	</table>
+	</div>
+</div>	
+<?php
+	require_once("footer.html");
+?>

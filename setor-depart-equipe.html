@@ -1,0 +1,199 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	if(isset($_POST['selectedsetor']))if(!empty($_POST['selectedsetor'])){$_SESSION['selected_setor'] = $_POST['selectedsetor'];}
+	if(isset($_POST['selecteddepartamento']))if(!empty($_POST['selecteddepartamento'])){$_SESSION['selected_departamento'] = $_POST['selecteddepartamento'];}
+	
+	
+	if(isset($_POST['slv_setor'])){//Salvar Setor**************
+		$try = $go->inserSetor($_POST['nome_setor']);$to = $xo->query($try); 
+		if($to === "Successfully"){echo "<script>alert(\"Setor salvo com sucesso.\");</script>";}else{echo "<script>alert(\"".$to."\");</script>";}
+		$to = 0; unset($_POST['slv_setor']);echo "<script>location.href='setor-depart-equipe.html';</script>";
+	}elseif(isset($_POST['slv_departamento'])){//Salvar Departamento***********
+		$try = $go->inserDepartamento($_POST['nome_departamento'],$_POST['selectsetor']);$to = $xo->query($try); 
+		if($to === "Successfully"){echo "<script>alert(\"Departamento salvo com sucesso.\");</script>";}else{echo "<script>alert(\"".$to."\");</script>";}
+		$to = 0; unset($_POST['slv_departamento']); echo "<script>location.href='setor-depart-equipe.html';</script>";
+	}elseif(isset($_POST['slv_equipe'])){//Salvar Equipe*******
+		$try = $go->inserEquipe($_POST['nome_equipe'],$_POST['selectdepartamento']);$to = $xo->query($try);
+		if($to === "Successfully"){echo "<script>alert(\"Departamento salvo com sucesso.\");</script>";}else{echo "<script>alert(\"".$to."\");</script>";}
+		$to = 0; unset($_POST['slv_equipe']);echo "<script>location.href='setor-depart-equipe.html';</script>";
+	}
+	
+	if(isset($_POST['deletarSetor'])){//Delete Setor
+			$try = $go->deleSetor_id($_POST['deletarSetor']);$to = $xo->query($try); 
+			if($to === "Successfully"){echo "<script>alert(\"Setor deletado com sucesso.\");</script>";}$to = 0; unset($_POST['deletarSetor']); echo "<script>location.href='setor-depart-equipe.html';</script>";
+	}elseif(isset($_POST['update_setor'])){//Update Setor
+		$try = $go->updateSetor($_POST['update_setor'],$_POST['editar_str']);$to = $xo->query($try);
+		if($to === "Successfully"){echo "<script>alert(\"Setor atualizado com sucesso.\");</script>";}$to = 0; unset($_POST['update_setor']); echo "<script>location.href='setor-depart-equipe.html';</script>";
+	}elseif(isset($_POST['deletarDepartamento'])){//Delete Departamento
+		$try = $go->deleDepartamento_id($_POST['deletarDepartamento']);$to = $xo->query($try); 
+		if($to === "Successfully"){echo "<script>alert(\"Departamento deletado com sucesso.\");</script>";}$to = 0; unset($_POST['deletarDepartamento']); echo "<script>location.href='setor-depart-equipe.html';</script>";
+	}elseif(isset($_POST['update_departamento'])){//Update Departamento
+		$try = $go->updateDepartamento($_POST['update_departamento'],$_POST['editar_dpt']);$to = $xo->query($try);
+		if($to === "Successfully"){echo "<script>alert(\"Departamento atualizado com sucesso.\");</script>";}$to = 0; unset($_POST['update_departamento']); echo "<script>location.href='setor-depart-equipe.html';</script>";
+	}elseif(isset($_POST['deletarEquipe'])){//Delete Equipe
+		$try = $go->deleEquipe_id($_POST['deletarEquipe']);$to = $xo->query($try); 
+		if($to === "Successfully"){echo "<script>alert(\"Equipe deletada com sucesso.\");</script>";}$to = 0; unset($_POST['deletarEquipe']); echo "<script>location.href='setor-depart-equipe.html';</script>";
+	}elseif(isset($_POST['update_equipe'])){//Update Equipe
+		$try = $go->updateEquipe($_POST['update_equipe'],$_POST['editar_eqp']);$to = $xo->query($try);
+		if($to === "Successfully"){echo "<script>alert(\"Equipe atualizada com sucesso.\");</script>";}$to = 0; unset($_POST['update_equipe']); echo "<script>location.href='setor-depart-equipe.html';</script>";
+	}
+	
+?>
+
+<section class="container-fluid" >
+
+   <div class="row">
+		<div class="text-center" style="margin-top:15px;margin-bottom:25px;">
+			<h1>Cadastrar Setor, Departamento ou Equipe</h1>
+		</div>
+	</div>
+
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<form action="" method="post">
+		<div class="col-xs-12 col-sm-4">
+			<h1>Criar Setor</h1>
+			<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+			<input type="text" class="form-control" name="nome_setor" placeholder="Novo Setor" required>
+			<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="slv_setor">Salvar</button>
+		</div>
+		</form>
+		<form action="" method="post">
+			<div class="col-xs-12 col-sm-4">
+			<h1>Criar Departamento</h1>
+			<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+			<select class="form-control" name="selectsetor" style="width:100%" required>
+				<option class="form-control" value="">Selecionar Setor</option>
+				<?php $try = $go->buscarSetor();$to = $xo->query($try);foreach($to as $setor){ echo'
+				<option class="form-control" value="'.$setor['nome_setor'].'">'.$setor['nome_setor'].'</option>';}?>
+			</select>
+			<input type="text" class="form-control" name="nome_departamento" placeholder="Departamento" required>
+			<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="slv_departamento">Salvar</button>
+		</div>
+		</form>
+		<form action="" method="post">
+		<div class="col-xs-12 col-sm-4">
+			<h1>Criar Equipe</h1>
+			<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+			<select class="form-control" name="selectdepartamento" style="width:100%" required>
+				<option class="form-control" value="">Selecionar Departamento</option>
+				<?php $try = $go->buscarDepartamento();$to = $xo->query($try);foreach($to as $depart){ echo'
+				<option class="form-control" value="'.$depart['nome_departamento'].'">'.$depart['nome_departamento'].'</option>';}?>
+			</select>
+			<input type="text" class="form-control" name="nome_equipe" placeholder="Equipe" required>
+			<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="slv_equipe">Salvar</button>
+		</div>
+		</form>
+	</div> 
+	
+	<div class="row">
+        <div class="col-sm-12">
+        	<hr class="hr">
+        </div>
+    </div>
+	
+	<div class="row" style="padding-bottom:20px;width:100%;">
+		<div class="col-xs-12 col-sm-4">
+       		<h1>Setores cadastrados</h1>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+       		<h1>Departamentos cadastrados</h1>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+       		<h1>Equipes cadastradas</h1>
+		</div>
+	</div>
+	
+	<div class="row" class="row" style="padding-bottom: 50px;" id="<?php if(isset($_POST['editarSetor'])){echo "setor";}elseif(isset($_POST['editarDepartamento'])){echo "departamento";}elseif(isset($_POST['editarEquipe'])){echo "equipe";}?>">
+		<div class="col-xs-12 col-sm-4">
+			<form action="#setor" method="post">
+			<?php $try = $go->buscarSetor();$to = $xo->query($try); if(!empty($to)){foreach($to as $setor){ echo'
+			<div class="col-xs-12 col-sm-12">
+				<input type="text" title="'.$setor['nome_setor'].'" '; if(isset($_POST['editarSetor']) and $_POST['editarSetor'] == $setor['idsetor']){echo 'name="editar_str" value="'.$setor['nome_setor'].'" style="background-color:yellow;">';}else{echo 'value="'.$setor['nome_setor'].'" readonly>';}; echo '</input>
+				<div class="btn-group btn-group-sm">';
+					if(isset($_POST['editarSetor']) and $_POST['editarSetor'] == $setor['idsetor']){ 
+					echo '
+						<button class="btn" type="submit" title="Salvar" name="update_setor" value="'.$setor['idsetor'].'"><span class="fa fa-floppy-o fa-lg"></span></button>';} 
+					echo'
+						<button class="btn" type="submit" title="Editar" name="editarSetor" value="'.$setor['idsetor'].'"><span class="fa fa-pencil fa-lg"></span></button>';
+					if($_SESSION['matr_nivel'] == 3 and $_POST['editarSetor'] == $setor['idsetor']){ echo '
+						<button class="btn" type="submit" title="Deletar" name="deletarSetor" value="'.$setor['idsetor'].'"><span class="fa fa-eraser fa-lg"></span></button>';} 
+					echo '
+				</div>
+			</div>';}
+			};?>
+			</form>
+		</div>
+		
+		<div class="col-xs-12 col-sm-4">
+			<form action="#departamento" method="post">
+				<select class="form-control" name="selectedsetor" style="width:100%" onchange="this.form.submit()">
+					<option class="form-control" value="">Selecionar Setor</option>
+					<?php $try = $go->buscarSetor();$to = $xo->query($try); foreach($to as $setor){ echo'
+					<option class="form-control" value="'.$setor['idsetor'].'">'.$setor['nome_setor'].'</option>';} echo'
+				</select>
+				<p></p>
+			</form>
+			<form action="#departamento" method="post">';
+			if(isset($_SESSION['selected_setor'])){
+				$try = $go->buscarDepartamento_Setor_Id($_SESSION['selected_setor']);$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $departa){ echo'
+				<div class="col-xs-12 col-sm-12">
+					<input type="text" title="'.$departa['nome_departamento'].'" '; if(isset($_POST['editarDepartamento']) and $_POST['editarDepartamento'] == $departa['iddepartamento']){echo 'name="editar_dpt" value="'.$departa['nome_departamento'].'" style="background-color:yellow;">';}else{echo 'value="'.$departa['nome_departamento'].'" readonly>';}; echo '</input>
+					<div class="btn-group btn-group-sm">';
+					if(isset($_POST['editarDepartamento']) and $_POST['editarDepartamento'] == $departa['iddepartamento']){ 
+					echo '
+						<button class="btn" type="submit" title="Salvar" name="update_departamento" value="'.$departa['iddepartamento'].'"><span class="fa fa-floppy-o fa-lg"></span></button>';} 
+					echo'
+						<button class="btn" type="submit" title="Editar" name="editarDepartamento" value="'.$departa['iddepartamento'].'"><span class="fa fa-pencil fa-lg"></span></button>';
+					if($_SESSION['matr_nivel'] == 3 and $_POST['editarDepartamento'] == $departa['iddepartamento']){ echo '
+						<button class="btn" type="submit" title="Deletar" name="deletarDepartamento" value="'.$departa['iddepartamento'].'"><span class="fa fa-eraser fa-lg"></span></button>';} 
+					echo '
+					</div>
+				</div>';}}
+				};?>
+			</form>
+		</div>
+
+		<div class="col-xs-12 col-sm-4">
+			<form action="#equipe" method="post">
+				<select class="form-control" name="selecteddepartamento" style="width:100%" onchange="this.form.submit()">
+					<option class="form-control" value="">Selecionar Departamento</option>
+					<?php $try = $go->buscarDepartamento();$to = $xo->query($try); foreach($to as $depart){ echo'
+					<option class="form-control" value="'.$depart['iddepartamento'].'">'.$depart['nome_departamento'].'</option>';} echo '
+				</select>
+				<p></p>
+			</form>
+			<form action="#equipe" method="post">';
+			if(isset($_SESSION['selected_departamento'])){
+				$try = $go->buscarEquipe_id($_SESSION['selected_departamento']);$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $equipe){ echo'
+			<div class="col-xs-12 col-sm-12">
+				<input type="text" title="'.$equipe['nome_equipe'].'" '; if(isset($_POST['editarEquipe']) and $_POST['editarEquipe'] == $equipe['idequipe']){echo 'name="editar_eqp" value="'.$equipe['nome_equipe'].'" style="background-color:yellow;">';}else{echo 'value="'.$equipe['nome_equipe'].'" readonly>';}; echo '</input>
+				<div class="btn-group btn-group-sm">';
+				if(isset($_POST['editarEquipe']) and $_POST['editarEquipe'] == $equipe['idequipe']){ 
+				echo '
+					<button class="btn" type="submit" title="Salvar" name="update_equipe" value="'.$equipe['idequipe'].'"><span class="fa fa-floppy-o fa-lg"></span></button>';} 
+				echo'
+					<button class="btn" type="submit" title="Editar" name="editarEquipe" value="'.$equipe['idequipe'].'"><span class="fa fa-pencil fa-lg"></span></button>';
+				if($_SESSION['matr_nivel'] == 3 and $_POST['editarEquipe'] == $equipe['idequipe']){ echo '
+					<button class="btn" type="submit" title="Deletar" name="deletarEquipe" value="'.$equipe['idequipe'].'"><span class="fa fa-eraser fa-lg"></span></button>';} 
+				echo '
+				</div>
+			</div>';}}
+			};?>
+			</form>
+		</div>
+		
+	</div>
+</section>
+
+<?php
+	require_once("footer.html");
+?>

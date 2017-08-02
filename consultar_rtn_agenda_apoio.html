@@ -1,0 +1,117 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	//Memória do formulário
+	if(isset($_POST['selectdepartamento_agd']))if(!empty($_POST['selectdepartamento_agd'])){$_SESSION['selectdepartamento_agd'] = $_POST['selectdepartamento_agd'];}
+	if(isset($_POST['selectequipe']))if(!empty($_POST['selectequipe'])){$_SESSION['selectequipe'] = $_POST['selectequipe'];};
+?>
+
+<div class="container-fluid">
+
+	<h1 class="form-signin-heading text-center">Consultar Retorno da Agenda Apoio</h1>
+
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<form method="post" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<label>Departamento</label>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<label>Equipe</label>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<label>Data</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" name="selectdepartamento_agd" onchange="this.form.submit()">
+				<option class="form-control" value="">Selecionar Departamento</option>';
+				<?php $try = $go->buscarDepartamento();$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $depart){ echo '
+				<option class="form-control" value="'.$depart['iddepartamento'].'"';
+				if(isset($_SESSION['selectdepartamento_agd'])){if($_SESSION['selectdepartamento_agd'] == $depart['iddepartamento']){echo " selected>";}
+				else{echo ">";}}else{echo ">";}echo $depart['nome_departamento'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" name="selectequipe" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Selecionar Equipe</option>
+				<?php if(isset($_SESSION['selectdepartamento_agd'])){
+				$try = $go->buscarEquipe_id($_SESSION['selectdepartamento_agd']);$to = $xo->query($try);}
+				if(!empty($to)){foreach($to as $equipe){ echo'				
+				<option class="form-control" value="'.$equipe['nome_equipe'].'"';
+				if(isset($_SESSION['selectdepartamento_agd'])){if($_SESSION['selectequipe'] == $equipe['nome_equipe']){echo " selected>";}else{echo ">";}}
+				else{echo ">";}echo $equipe['nome_equipe'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" id="dataagenda" name="data_agenda" title="Data da Agenda" placeholder="Data da Agenda" required>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="consultar">Consultar</button>
+		</div>
+	</div>
+	</form>
+	<p></p>
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-nowrap text-center">Chamado</th>
+				<th class="text-nowrap text-center">Atividade</th>
+				<th class="text-nowrap text-center">Nome do Projeto</th>
+				<th class="text-nowrap text-center">Cidade</th>
+				<th class="text-nowrap text-center">Cronograma</th>
+				<th class="text-nowrap text-center">RDM</th>
+				<th class="text-nowrap text-center">Status RDM</th>
+				<th class="text-nowrap text-center">Prioridade</th>
+				<th class="text-nowrap text-center">Horário</th>
+				<th class="text-nowrap text-center">Técnico de Campo</th>
+				<th class="text-nowrap text-center">Técnico Executor</th>
+				<th class="text-nowrap text-center">Status</th>
+				<th class="text-nowrap text-center">Justificativa</th>
+				<th class="text-nowrap text-center">Observação</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php
+		if(isset($_POST['consultar'])){
+			$try = $go->buscarAgendaApoio_Equipe_Data_Passado($_POST['selectequipe'],$_POST['data_agenda']);$to = $xo->query($try); $passado=1;
+			if(!empty($to)){foreach($to as $cmdo){ echo '
+			<tr>
+				<td class="text-center"><form id="filachamado" method="GET" action="/chamado_detalhe.html" target="_blank"><input type="submit" id="'.$cmdo['chamado'].'" name="chamado" value="'.$cmdo['chamado'].'" style="display:none;"/><a style="cursor: pointer" onclick="$(\'#'.$cmdo['chamado'].'\').click();">'.$cmdo['chamado'].'</a></input></form></td>
+				<td class="text-nowrap text-center">'.$cmdo['nome_tipo'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['nome_projeto'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['nome_cidade'].'</td>
+				<td class="text-nowrap text-center">';if(!empty($cmdo['cronograma_pcp']))echo $xo->sql_to_br($cmdo['cronograma_pcp']); echo'</td>
+				<td class="text-nowrap text-center">'.$cmdo['rdm_apoio'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['status_rdm_apoio'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['nome_prioridade'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['horario_turno'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['tecnico_campo_apoio'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['tecnico_executor_apoio'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['status_apoio'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['justificativa_apoio'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['observacao_ag_apoio'].'</td>
+			</tr>';}};
+		}
+	?>
+		</tbody>
+	</table>
+	</div>
+</div>	
+<?php
+	require_once("footer.html");
+?>

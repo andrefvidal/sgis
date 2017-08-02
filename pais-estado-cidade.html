@@ -1,0 +1,156 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+?>
+
+<section class="container-fluid" >
+
+        <div class="row">
+        	<div class="text-center">
+        		<h1>Cadastrar Pais, Estado ou Cidade</h1>
+            </div>
+        </div>
+        
+        <div class="row">    
+			<div class="col-xs-12 col-sm-4">
+				<h1>Pais</h1>
+				<form action="" method="post">
+					<input type="text" class="form-control" name="nome_pais" placeholder="Pais" required/>
+					<button class="btn btn-success" type="submit" name="slv_pais">Salvar</button>
+				</form>
+			</div>
+			<div class="col-xs-12 col-sm-4">
+				<h1>Estado</h1>
+				<form action="" method="post">
+					<select class="form-control" name="selectpais" style="width:100%">
+						<option class="form-control" value="">Selecionar Pais</option>
+						<?php $try = $go->buscarPais();$resu = $xo->query($try);?>
+						<?php foreach($resu as $do1){ echo'
+						<option class="form-control" value="' . $do1['pais'] . '">' . $do1['pais'] . '</option>';}?>
+					</select>
+					<input type="text" class="form-control" name="nome_estado_uf" placeholder="UF" required/>
+					<input type="text" class="form-control" name="nome_estado" placeholder="Estado" required/>
+					<button class="btn btn-success" type="submit" name="slv_estado">Salvar</button>
+				</form>
+			</div>
+			<div class="col-xs-12 col-sm-4">
+				<h1>Cidade</h1>
+				<form action="" method="post">
+					<select class="form-control" name="selectestado" style="width:100%">
+						<option class="form-control" value="">Selecionar Estado</option>
+						<?php $try2 = $go->buscarEstado();$resu2 = $xo->query($try2);?>
+						<?php foreach($resu2 as $do2){ echo'
+						<option class="form-control" value="' . $do2['estado'] . '">' . $do2['estado'] . '</option>';}?>
+					</select>
+					<input type="text" class="form-control" name="nome_cidade_sigla" placeholder="Sigla" required/>
+					<input type="text" class="form-control" name="nome_cidade" placeholder="Cidade" required/>
+					<button class="btn btn-success" type="submit" name="slv_cidade">Salvar</button>
+				</form>
+			</div>
+		</div>
+
+		<?php
+		if(isset($_POST['slv_pais'])){
+			unset($_POST['slv_pais']);
+		}elseif(isset($_POST['slv_estado'])){
+			unset($_POST['slv_estado']);
+		}elseif(isset($_POST['slv_cidade'])){
+			unset($_POST['slv_cidade']);
+		}
+			
+		?>		    
+		
+		<div class="row">
+            <div class="col-sm-12">
+            	<hr class="hr">
+            </div>
+        </div>
+		
+		<div class="row">
+			<div class="col-xs-12 col-sm-1"></div>
+			<div class="col-xs-12 col-sm-10">
+			<div class="text-center" style="padding-bottom: 20px;width:100%;">
+        		<h1>Cidades cadastradas</h1>
+            </div>
+			<div class="btn-toolbar" id="<?php if(isset($_POST['cdd_ordem']) or isset($_POST['editarCidade'])){echo "cidades";}?>">
+			<form action="#cidades" method="post">
+				<div class="btn-group btn-group-sm text-center" style="padding-bottom: 20px;">
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="A">A</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="B">B</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="C">C</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="D">D</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="E">E</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="F">F</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="G">G</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="H">H</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="I">I</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="J">J</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="K">K</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="L">L</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="M">M</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="N">N</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="O">O</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="P">P</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="Q">Q</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="R">R</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="S">S</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="T">T</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="U">U</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="V">V</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="W">W</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="X">X</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="Y">Y</button>
+					<button class="btn btn-secondary" type="submit" name="cdd_ordem" value="Z">Z</button>
+				</div>
+			</form>
+			</div>
+			</div>
+			<div class="col-xs-12 col-sm-1"></div>
+		</div>
+		
+		<div style="padding-bottom: 50px;">
+		<form method="post">
+		<?php 
+			if(isset($_POST['cdd_ordem'])){
+			$try = $go->buscarCidade_letra($_POST['cdd_ordem']);$resu3 = $xo->query($try);
+			if(!empty($resu3)){foreach($resu3 as $do3){ echo'
+			<div class="row">
+				<div class="col-xs-12 col-sm-12">
+						<label>Nome:</label>
+						<input type="text" title="'.$do3['nome_cidade'].'" '; if(isset($_POST['editarCidade']) and $_POST['editarCidade'] == $do3['idcidade']){echo 'name="editar_cdd" value="'.$do3['nome_cidade'].'" style="background-color:yellow;max-height:30px;">';}else{echo 'value="'.$do3['nome_cidade'].'" readonly >';}; echo '</input>
+						<label>Sigla:</label> 
+						<input type="text" title="'.$do3['sigla'].'" '; if(isset($_POST['editarCidade']) and $_POST['editarCidade'] == $do3['idcidade']){echo 'name="editar_sga" placeholder="'.$do3['sigla'].'">';}else{echo 'placeholder="'.$do3['sigla'].'" readonly>';}; echo '</input>
+						<label>Estado:</label>
+						<input type="text" title="'.$do3['estado'].'" placeholder="'.$do3['estado'].'" readonly></input>
+					<div class="btn-group btn-group-sm">';
+					if($_SESSION['matr_nivel'] == 3 AND $_POST['editarCidade'] == $do3['idcidade']){ echo '
+						<button class="btn" type="submit" title="Deletar" name="deletarCidade" value="'.$do3['idcidade'].'">
+							<span class="fa fa-eraser fa-lg"></span>
+						</button>';}
+					echo '
+						<button class="btn" type="submit" title="Editar" name="editarCidade" value="'.$do3['idcidade'].'">
+							<span class="fa fa-pencil fa-lg"></span>
+							<input name="cdd_ordem" value="'.$_POST['cdd_ordem'].'" hidden/>
+						</button>
+						<button class="btn" type="submit" title="Salvar" name="salvarCidade" value="'.$do3['idcidade'].'">
+							<span class="fa fa-floppy-o fa-lg"></span>
+						</button>
+					</div>
+				</div>
+			</div>';}}};?>
+			</form>
+		</div>
+		
+		<?php
+			//Delete Cidade
+			if(isset($_POST['deletarCidade'])){$try4 = $go->deleCidade($_POST['deletarCidade']);$resu4 = $xo->query($try4); 
+			if($resu4 === "Successfully"){echo "<script>alert(\"Item deletado com sucesso.\");</script>";}$resu4 = 0; unset($_POST['deletarCidade']);};
+			//Update Cidade
+			if(isset($_POST['salvarCidade'])){$try4 = $go->updateCidade($_POST['salvarCidade'],$_POST['editar_sga'],$_POST['editar_cdd']);$resu4 = $xo->query($try4);
+			if($resu4 === "Successfully"){echo "<script>alert(\"Item salo com sucesso.\");</script>";}$resu4 = 0; unset($_POST['salvarCidade']);};
+		?>
+</section>
+
+<?php
+	require_once("footer.html");
+?>

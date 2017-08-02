@@ -1,0 +1,138 @@
+<?php
+	//Formata uma hora/data local de acordo com o configuração de locale.
+	setlocale(LC_ALL, 'pt_BR', 'pt_BR.utf-8', 'pt_BR.utf-8', 'portuguese');
+	date_default_timezone_set('America/Sao_Paulo');
+	
+	require_once("dao.php");//Funções para Objeto de acesso a dados (DAO, acrônimo de Data Access Object)
+	error_reporting(0);
+	//Inicia a sessão
+	session_start();
+	
+	$timeout = 3600; // Tempo da sessao em segundos
+	// Verifica se existe o parametro timeout
+	if(isset($_SESSION['timeout'])) {
+		// Calcula o tempo que ja se passou desde a cricao da sessao
+		$duracao = time() - (int) $_SESSION['timeout'];
+	
+		// Verifica se ja expirou o tempo da sessao
+		if($duracao > $timeout) {
+			// Destroi a sessao e cria uma nova
+			session_destroy();
+			session_start();
+		}
+	}
+	// Atualiza o timeout.
+	$_SESSION['timeout'] = time();
+	
+	// se usuario nao registrado, redireciona p/ validacao
+	if(!isset($_SESSION['matr_usuario'])){header("Location: login.html");}
+	
+?>
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>SGIS</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta http-equiv="refresh" content="300">
+		<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" type="text/css">
+		<link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css">
+		<link rel="stylesheet" type="text/css" href="css/jquery-ui.css"‌​>
+		<link rel="stylesheet" type="text/css" href="css/style.css">
+		<link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon" />
+		<script src="js/jquery.min.js"></script>
+	</head>
+
+<body id="inicio" data-spy="scroll" data-target=".navbar" data-offset="60" class="mx-auto">
+
+<nav class="navbar navbar-default color-nav navbar-static-top">
+    <div class="container">
+        <div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" >SGIS</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+			<ul class="nav navbar-nav hover">
+				<?php if(isset($_SESSION['matr_equipe']) AND $_SESSION['matr_equipe'] == 'PCP')echo '
+				<li><a href="/agendamento.html" title="Agendamento"><strong>Agendamento</strong></a></li>';else echo '
+				<li><a href="/" title="Minha Fila"><strong>Minha Fila</strong></a></li>';?>
+				<?php if(isset($_SESSION['matr_equipe']) AND $_SESSION['matr_equipe'] != 'PCP')echo '
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><strong>Filas</strong><span class="caret"></span></a>
+					<ul class="dropdown-menu menu-hover">
+						<li><a href="/chamados_aguardando.html">Chamados Aguardando Aprovação</a></li>
+						<li><a href="/chamados_aprovados.html">Chamados Aprovados</a></li>
+						<li><a href="/chamados_fechados.html">Chamados Fechados</a></li>
+						<li><a href="/chamados_apoio.html">Chamados Apoio</a></li>
+					</ul>
+				</li>';?>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><strong>Chamado</strong><span class="caret"></span></a>
+					<ul class="dropdown-menu menu-hover">
+						<?php if(isset($_SESSION['matr_equipe']) AND $_SESSION['matr_equipe'] != 'PCP')echo '
+						<li><a href="/cad_chamado.html">Cadastrar Chamado</a></li>';?>
+						<li><a href="/consultar_chamado.html">Consultar Chamado Pai</a></li>
+						<li><a href="/consultar_chamado_filho.html">Consultar Chamado Filho</a></li>
+					</ul>
+				</li>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><strong>Agenda</strong><span class="caret"></span></a>
+					<ul class="dropdown-menu menu-hover">
+						<?php if(isset($_SESSION['matr_equipe']) AND $_SESSION['matr_equipe'] != 'PCP')echo '
+						<li><a href="/agendamento.html" title="Agendamento">Agendamento</a></li>
+						<li><a href="/agenda.html">Agenda '.$_SESSION['matr_equipe'].'</a></li>
+						<li><a href="/retorno_agenda.html">Retorno Agenda</a></li>
+						<li><a href="/valida_rtn_agenda.html">Validar Retorno da Agenda</a></li>';?>
+						<li><a href="/consultar_agenda.html">Consultar Agenda</a></li>
+						<li><a href="/consultar_agenda_apoio.html">Consultar Agenda Apoio</a></li>
+						<li><a href="/consultar_rtn_agenda.html">Consultar Retorno da Agenda</a></li>
+						<li><a href="/consultar_rtn_agenda_apoio.html">Consultar Retorno da Agenda Apoio</a></li>
+					</ul>
+				</li>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><strong>Relatório</strong><span class="caret"></span></a>
+					<ul class="dropdown-menu menu-hover">
+						<li><a href="/agenda_diaria.html">Agenda Diaria</a></li>
+						<li><a href="/agenda_mensal.html">Agenda Mensal</a></li>
+						<li><a href="/relatorio_chamados_sla.html">Chamados - SLA</a></li>
+					</ul>
+				</li>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><strong>Biblioteca</strong><span class="caret"></span></a>
+					<ul class="dropdown-menu menu-hover">
+					<li><a href="/arquivo-biblioteca.html">Cadastrar Material</a></li>
+					<li><a href="/consultar-biblioteca.html">Pesquisar Conteúdo</a></li>
+					</ul>
+				</li>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><strong>Checklist</strong><span class="caret"></span></a>
+					<ul class="dropdown-menu menu-hover">
+					<li><a href="/arquivo-checklist.html">Cadastrar Checklist</a></li>
+					<li><a href="/consultar-checklist.html">Pesquisar Checklist</a></li>
+					</ul>
+				</li>
+			</ul>
+			<ul class="nav navbar-nav navbar-right">
+				<li class="dropdown btn-group btn-group-lg">
+					<a class="btn"><i class="fa fa-user fa-fw"></i><?php echo $_SESSION['matr_usuario'];?></a>
+					<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#"><span class="fa fa-caret-down" title="dropdown menu"></span></a>
+					<ul class="dropdown-menu">
+						<li><a <?php if(isset($_SESSION['matr_nivel']))if($_SESSION['matr_nivel'] == '2' OR $_SESSION['matr_nivel'] == '3')echo 'href="/painel.html"';else echo 'disabled';?>>Painel de controle</a></li>
+						<li role="separator" class="divider"></li>
+						<li><a href="logoff.html"><i class="fa fa-unlock"></i>  Sair</a></li>
+					</ul>
+				</li>
+			</ul>
+        </div>
+    </div>
+</nav>
+
+<div id="wrap">

@@ -1,0 +1,79 @@
+<?php
+	require_once("head.html");
+	$go = new sql(); $xo = new dao();
+	
+	
+	if(isset($_POST['slv_prioridade'])){//Salvar Prioridade
+		$try = $go->inserPrioridade($_POST['cad_prioridade'],"NULL");$to = $xo->query($try); 
+		if($to === "Successfully"){echo "<script>alert(\"Prioridade salva com sucesso.\");</script>";}$to = 0; unset($_POST['slv_prioridade']); echo "<script>location.href='prioridade.html';</script>";
+	}elseif(isset($_POST['deletar_prioridade'])){//Delete Prioridade
+		$try = $go->delePrioridade($_POST['deletar_prioridade']);$to = $xo->query($try); 
+		if($to === "Successfully"){echo "<script>alert(\"Prioridade deletado com sucesso.\");</script>";}$to = 0; unset($_POST['deletar_prioridade']); echo "<script>location.href='prioridade.html';</script>";
+	}elseif(isset($_POST['update_prioridade'])){//Update Prioridade
+		$try = $go->updatePrioridade($_POST['update_prioridade'],$_POST['editar_priodd']);$to = $xo->query($try);
+		if($to === "Successfully"){echo "<script>alert(\"Prioridade atualizada com sucesso.\");</script>";}$to = 0; unset($_POST['update_prioridade']); echo "<script>location.href='prioridade.html';</script>";
+	}
+?>
+
+<section class="container-fluid" >
+
+	<div class="row">
+		<div class="text-center" style="margin-top:15px;margin-bottom:25px;">
+			<h1>Cadastrar prioridades</h1>
+		</div>
+	</div>
+
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<form action="" method="post">
+			<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+				<input type="text" class="form-control" name="cad_prioridade" placeholder="Nova Prioridade" required/>
+			</div>	
+			<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+			<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+				<button class="btn btn-success btn-sm btn-block" type="submit" name="slv_prioridade">Salvar</button>
+			</div>
+		</form>
+	</div>
+	
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="text-center" style="padding-bottom:20px;width:100%;">
+			<h1>Prioridades Cadastradas</h1>
+		</div>
+	</div>
+	
+	<div class="row" style="padding-bottom: 50px;" id="<?php if(isset($_POST['editar_prioridade'])){ echo'prioridade';}?>">
+		<form action="#prioridade" method="post">
+		<?php $try = $go->buscarPrioridade();$to = $xo->query($try); if(!empty($to)){foreach($to as $priori){ echo'
+			<div class="col-xs-12 col-sm-4"></div>
+			<div class="col-xs-12 col-sm-8">
+				<input type="text" title="'.$priori['nome_prioridade'].'" placeholder="Prioridade" value="'.$priori['nome_prioridade'].'" '; if(isset($_POST['editar_prioridade']) and $_POST['editar_prioridade'] == $priori['idprioridade']){echo ' name="editar_priodd" style="background-color:yellow;max-height:30px;">';}else{echo ' readonly >';}; echo '</input>
+				<div class="btn-group btn-group-sm">';
+				if(isset($_POST['editar_prioridade']) and $_POST['editar_prioridade'] == $priori['idprioridade']){ 
+				echo '
+					<button class="btn" type="submit" title="Salvar" name="update_prioridade" value="'.$priori['idprioridade'].'"><span class="fa fa-floppy-o fa-lg"></span></button>';} 
+				echo '
+					<button class="btn" type="submit" title="Editar" name="editar_prioridade" value="'.$priori['idprioridade'].'"><span class="fa fa-pencil fa-lg"></span></button>';
+				if($_SESSION['matr_nivel'] == 3 and $_POST['editar_prioridade'] == $priori['idprioridade']){ echo '
+					<button class="btn" type="submit" title="Deletar" name="deletar_prioridade" value="'.$priori['idprioridade'].'"><span class="fa fa-eraser fa-lg"></span></button>';}
+				echo '
+				</div>
+			</div>';}
+		};?>
+		</form>
+	</div>
+		
+		
+		
+</section>
+
+<?php
+	require_once("footer.html");
+?>

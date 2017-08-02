@@ -1,0 +1,311 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+		
+	$try = $go->buscarChamadoFilho_CPai($_GET['chamado']);$buscar_c_f = $xo->query($try);
+	if(!empty($buscar_c_f)){foreach($buscar_c_f as $dtl){
+		$_POST['idequipe_pai'] = $dtl['equipe_c_p'];
+		$_POST['idequipe_filho'] = $dtl['equipe_apoio']; 
+		}
+	}
+
+?>
+
+<div class="container-fluid">
+
+	<div class="col-xs-12 col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+		<form method="GET" action="/updatechamado.html">
+		<div class="col-xs-12 col-sm-3">
+			<?php if($_SESSION['matr_equipeid'] == $_POST['idequipe_pai'] OR $_SESSION['matr_nivel'] == 3){
+				echo '<button class="btn btn-primary btn-sm btn-block" type="submit" name="chamado" value="'.$_GET['chamado'].'">Editar Chamado</button>';
+				}
+			?>
+		</div>
+		</form>
+		<form method="GET" action="/updatechamado_can_reabrir.html">
+		<div class="col-xs-12 col-sm-3">
+			<?php if($_SESSION['matr_equipeid'] == $_POST['idequipe_pai'] OR $_SESSION['matr_nivel'] == 3){
+				echo '<button class="btn btn-primary btn-sm btn-block" type="submit" name="chamado" value="'.$_GET['chamado'].'">Cancelar/Reabrir Chamado</button>';
+				}
+			?>
+		</div>
+		</form>
+		<form id="filachamado" method="GET" action="/update_chamado_filho.html">
+		<div class="col-xs-12 col-sm-3">
+			<?php if($_SESSION['matr_equipeid'] == $_POST['idequipe_filho'] OR $_SESSION['matr_nivel'] == 3) {
+				echo '<button class="btn btn-primary btn-sm btn-block" type="submit" name="chamado" value="'.$_GET['chamado'].'">Atualizar Chamado</button>';
+				}
+			?>
+		</div>
+		</form>
+		<form id="filachamado" method="GET" action="/update_chamado_filho_agenda.html">
+		<div class="col-xs-12 col-sm-3">
+			<?php if($_SESSION['matr_equipeid'] == $_POST['idequipe_filho'] OR $_SESSION['matr_equipe'] == 'PCP' OR $_SESSION['matr_nivel'] == 3){ 
+				echo '<button class="btn btn-primary btn-sm btn-block" type="submit" name="chamado" value="'.$_GET['chamado'].'">Atualizar Status/Agendamento</button>';
+				}
+			?>
+		</div>
+		</form>
+	</div>
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<h1 class="form-signin-heading text-center">Chamados Filho Abertos</h1>
+	<div class="table-responsive">          
+		<table class="table table-hover table-bordered">        
+			<thead>
+				<tr>
+					<th class="text-center">Chamado</th>
+					<th class="text-center">Autor</th>
+					<th class="text-center">Equipe Solicitada</th>
+					<th class="text-center">Data Aprovacao</th>
+					<th class="text-center">Status Chamado Filho</th>
+					<th class="text-center">Analista Responsável</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php $try = $go->buscarChamadoFilho_CPai_idPai($_GET['chamado']);$to = $xo->query($try);
+			if(!empty($to)){foreach($to as $cmdof){ echo'
+				<tr>
+					<td class="text-center">'.$cmdof['chamado'].'</td>
+					<td class="text-center">'.$cmdof['autor'].'</td>
+					<td class="text-center">'.$cmdof['nome_equipe'].'</td>
+					<td class="text-center">';if(!empty($cmdof['data_aprovacao']))echo $xo->sql_to_br($cmdof['data_aprovacao']); echo'</td>
+					<td class="text-center">'.$cmdof['nome_status'].'</td>
+					<td class="text-center">'.$cmdof['nome'].' '.$cmdof['sobrenome'].'</td>
+				</tr>
+			';}}$to=0;?>
+			</tbody>
+		</table>
+	</div>
+	<p></p>
+	<h1 class="form-signin-heading text-center">Arquivos do Chamado</h1>
+	<div class="table-responsive">          
+		<table class="table table-hover table-bordered">
+			<thead>
+				<tr>
+					<th class="text-center">Nome do arquivo</th>
+					<th class="text-center">Download</th>
+					<th class="text-center">Responsável</th>
+					<th class="text-center">Data Inserção</th>
+					<th class="text-center">Observação</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php $try = $go->buscarArquivo_chamado($_GET['chamado']);$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $arq){ echo'
+				<tr>
+					<td class="text-center">'.$arq['nome_arquivo'].'</td>
+					<td class="text-center"><a target="_blank" href="'.$arq['caminho'].'">';
+						if($arq['caminho'] != "deletado"){echo 'Link';} echo'</a></td>
+					<td class="text-center">'.$arq['nome'].' '.$arq['sobrenome'].'</td>
+					<td class="text-center">';if(!empty($arq['data_criacao_arq']))echo $xo->sql_to_br_horas($arq['data_criacao_arq']); echo'</td>
+					<td class="text-center">'.$arq['observacao_arq'].'</td>
+				</tr>
+			';}}?>
+			</tbody>
+		</table>
+	</div>
+	<h1 class="form-signin-heading text-center">Detalhes do Chamado Pai</h1>
+	<div class="table-responsive">          
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th class="text-center">Chamado</th>
+				<th class="text-center">Autor</th>
+				<th class="text-center">Vencimento</th>
+				<th class="text-center">Data Abertura</th>
+				<th class="text-center">Data Aprovação</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php $try = $go->buscarChamadoPai_id($_GET['chamado']);$buscar_c_p = $xo->query($try);
+		if(!empty($buscar_c_p)){foreach($buscar_c_p as $cmdo){ echo '
+			<tr>
+				<td class="text-center">'.$cmdo['chamado'].'</td>
+				<td class="text-center">'.$cmdo['autor'].'</td>
+				<td class="text-center">';if(!empty($cmdo['vencimento']))echo $xo->sql_to_br($cmdo['vencimento']); echo'</td>
+				<td class="text-center">';if(!empty($cmdo['data_abertura']))echo $xo->sql_to_br($cmdo['data_abertura']); echo'</td>
+				<td class="text-center">';if(!empty($cmdo['data_aprovacao']))echo $xo->sql_to_br($cmdo['data_aprovacao']); echo'</td>
+			</tr>';}};?>
+		</tbody>
+	</table>
+	</div>
+	<div class="table-responsive">          
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th>Nome do projeto</th>
+				<th>Descrição</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php foreach($buscar_c_p as $cmdo){ echo '
+			<tr>
+				<td>'.$cmdo['nome_projeto'].'</td>
+				<td>'.$cmdo['descricao'].'</td>
+			</tr>';};?>
+		</tbody>
+	</table>
+	</div>
+	<div class="table-responsive">          
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th class="text-center">Tipo</th>
+				<th class="text-center">Prioridade</th>
+				<th class="text-center">Status</th>
+				<th class="text-center">Justificativa</th>
+				<th class="text-center">Cidade</th>
+				<th class="text-center">Previsão Logistica</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php foreach($buscar_c_p as $cmdo){ echo '
+			<tr>
+				<td class="text-center">'.$cmdo['nome_tipo'].'</td>
+				<td class="text-center">'.$cmdo['nome_prioridade'].'</td>
+				<td class="text-center">'.$cmdo['nome_status'].'</td>
+				<td class="text-center">'.$cmdo['nome_justificativa'].'</td>
+				<td class="text-center">'.$cmdo['nome_cidade'].'</td>
+				<td class="text-center">';if(!empty($cmdo['limitematerial_pcp']))echo $xo->sql_to_br($cmdo['limitematerial_pcp']); echo'</td>
+			</tr>';};?>
+		</tbody>
+	</table>
+	</div>
+	<h1 class="form-signin-heading text-center">Chamados de Apoio Abertos</h1>
+	<div class="table-responsive">          
+		<table class="table table-hover table-bordered">        
+			<thead>
+				<tr>
+					<th class="text-center">Chamado</th>
+					<th class="text-center">Equipe Solicitante</th>
+					<th class="text-center">Responsável Solicitação</th>
+					<th class="text-center">Equipe Solicitada</th>
+					<th class="text-center">Analise C.Apoio</th>
+					<th class="text-center">Vencimento</th>
+					<th class="text-center">Data Analise</th>
+					<th class="text-center">Analista Responsável</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php $try = $go->buscarChamadoApoio_CFilho_idFilho($_GET['chamado']);$buscar_c_f = $xo->query($try);
+			if(!empty($buscar_c_f)){foreach($buscar_c_f as $cmdof){ echo'
+				<tr>
+					<td class="text-center"><form method="GET" action="/update_chamado_apoio.html">
+					<input type="hidden" name="idchamadofilho" value="'.$_GET['chamado'].'">
+					<input type="submit" id="'.$cmdof['chamado'].'cp'.'" name="idchamadoapoio" value="'.$cmdof['idchamado_apoio'].'" style="display:none;"><a style="cursor: pointer" onclick="$(\'#'.$cmdof['chamado'].'cp'.'\').click();">'.$cmdof['chamado'].'</a></input>
+					</form></td>
+					<td class="text-center">'.$cmdof['e_rqtante'].'</td>
+					<td class="text-center">'.$cmdof['solicitante'].'</td>
+					<td class="text-center">'.$cmdof['e_solicitada'].'</td>
+					<td class="text-center">'.$cmdof['analise_chamado'].'</td>
+					<td class="text-center">';if(!empty($cmdof['data_lmt_analise']))echo $xo->sql_to_br($cmdof['data_lmt_analise']); echo'</td>
+					<td class="text-center">';if(!empty($cmdof['data_analise']))echo $xo->sql_to_br($cmdof['data_analise']); echo'</td>
+					<td class="text-center">'.$cmdof['r_analise'].'</td>
+				</tr>
+			';}}?>
+			</tbody>
+		</table>
+	</div>
+	<p></p>
+	<h1 class="form-signin-heading text-center">Detalhes do Chamado Filho</h1>
+	<div class="table-responsive">          
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th class="text-center">Responsável</th>
+				<th class="text-center">Status</th>
+				<th class="text-center">Prazo de Entrega</th>
+				<th class="text-center">Data da Resolução</th>
+				<th class="text-center">Horário da Atividade</th>
+				<th class="text-center">Tempo de Execucao</th>
+				<th class="text-center">Técnico de Campo</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php $try = $go->buscarChamadoFilho_CPai($_GET['chamado']);$buscar_c_f = $xo->query($try);
+		if(!empty($buscar_c_f)){foreach($buscar_c_f as $cmdo){ echo '
+			<tr>
+				<td class="text-center">'.$cmdo['nome'].' '.$cmdo['sobrenome'].'</td>
+				<td class="text-center">'.$cmdo['nome_status'].'</td>
+				<td class="text-center">';if(!empty($cmdo['data_entrega_c_p']))echo $xo->sql_to_br($cmdo['data_entrega_c_p']); echo'</td>
+				<td class="text-center">';if(!empty($cmdo['data_resolucao']))echo $xo->sql_to_br($cmdo['data_resolucao']); echo'</td>
+				<td class="text-center">'.$cmdo['horario_turno'].'</td>
+				<td class="text-center">'.$cmdo['tempo_execucao'].'</td>
+				<td class="text-center">'.$cmdo['tecnico_campo'].'</td>
+			</tr>';}};?>
+		</tbody>
+	</table>
+	</div>
+	<div class="table-responsive">          
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th class="text-center">Cronograma</th>
+				<th class="text-center">RDM</th>
+				<th class="text-center">RDM Status</th>
+				<th class="text-center">Cronograma Backup</th>
+				<th class="text-center">RDM Backup</th>
+				<th class="text-center">RDM Status Backup</th>
+				
+			</tr>
+		</thead>
+		<tbody>
+	<?php foreach($buscar_c_f as $cmdo){ echo '
+			<tr>
+				<td class="text-center">';if(!empty($cmdo['cronograma_pcp']))echo $xo->sql_to_br($cmdo['cronograma_pcp']); echo'</td>
+				<td class="text-center">'.$cmdo['rdm'].'</td>
+				<td class="text-center">'.$cmdo['rdm_status'].'</td>
+				<td class="text-center">';if(!empty($cmdo['cronograma_pcp_bkp']))echo $xo->sql_to_br($cmdo['cronograma_pcp_bkp']); echo'</td>
+				<td class="text-center">'.$cmdo['rdm_bkp'].'</td>
+				<td class="text-center">'.$cmdo['rdm_status_bkp'].'</td>
+			</tr>';};?>
+		</tbody>
+	</table>
+	</div>
+	<div class="table-responsive">          
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th>Observação</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php foreach($buscar_c_f as $cmdo){ echo '
+			<tr>
+				<td>'.$cmdo['observacao_c_f'].'</td>
+			</tr>';};?>
+		</tbody>
+	</table>
+	</div>
+	<div class="table-responsive">          
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th class="text-center">Histórico</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php $ht=0; foreach($buscar_c_p as $cmdo){$linhas = $cmdo['historico'];}; $histo = explode(PHP_EOL, $linhas);
+			if(!is_null($histo)){foreach($histo as $todo){echo '
+			<tr';echo !($ht % 2) ? ' class="warning"' : ' class="info"';$ht++;echo '>
+				<td class="text-center">'.nl2br($todo).'</td>
+			</tr>';}}?>
+	<?php $ht=0; foreach($buscar_c_f as $cmdo){$linhas = $cmdo['historico_c_f'];}; $histo = explode(PHP_EOL, $linhas);
+			if(!is_null($histo)){foreach($histo as $todo){echo '
+			<tr';echo !($ht % 2) ? ' class="warning"' : ' class="info"';$ht++;echo '>
+				<td class="text-center">'.nl2br($todo).'</td>
+			</tr>';}}?>
+		</tbody>
+	</table>
+	</div>
+</div>
+
+<?php
+	require_once("footer.html");
+?>

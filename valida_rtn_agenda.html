@@ -1,0 +1,201 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	if(isset($_POST['dia_escolhido_vld']) AND !empty($_POST['dia_escolhido_vld']) OR isset($_POST['mes_escolhido_vld']) AND !empty($_POST['mes_escolhido_vld'])){
+		$_SESSION['dia_escolhido_vld'] = $_POST['dia_escolhido_vld'];
+		$_SESSION['mes_escolhido_vld'] = $_POST['mes_escolhido_vld'];
+		$_SESSION['dia_agd_vld'] = date("Y").'-'.$_SESSION['mes_escolhido_vld'].'-'.$_SESSION['dia_escolhido_vld'];
+	}elseif(!isset($_POST['dia_escolhido_vld']) OR !isset($_POST['mes_escolhido_vld'])){
+		$_SESSION['dia_escolhido_vld'] = date("d");
+		$_SESSION['mes_escolhido_vld'] = date("m");
+		$_SESSION['dia_agd_vld'] = date("Y").'-'.$_SESSION['mes_escolhido_vld'].'-'.$_SESSION['dia_escolhido_vld'];
+	}
+	
+	if(isset($_POST['chamadopai']) AND !empty($_POST['chamadopai'])){$_SESSION['chamadopai'] = $_POST['chamadopai'];}
+	if(isset($_POST['idchamado_f']) AND !empty($_POST['idchamado_f'])){$_SESSION['idchamado_f'] = $_POST['idchamado_f'];}
+	if(isset($_POST['observacao_agenda']) AND !empty($_POST['observacao_agenda'])){$_SESSION['updtobservacaocf'] = $_POST['observacao_agenda'];}
+	if(isset($_POST['status_chm_filhoid']) AND !empty($_POST['status_chm_filhoid'])){$_SESSION['status_chm_filhoid'] = $_POST['status_chm_filhoid'];}
+	//Buscar no nome do Status pelo ID
+	$try = $go->buscarStatus_id($_SESSION['status_chm_filhoid']);$to = $xo->query($try);
+	if(!empty($to)){foreach($to as $sts){$_SESSION['updt_nome_sts_filho'] = $sts['nome_status'];}}
+	
+	//Histórico do chamado Filho
+	if(isset($_POST['idchamado_f'])){
+		$try = $go->buscarChamadoFilho_CPai($_SESSION['chamadopai']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $cmdof){ 
+			$_POST['updtidstatusfilhoid'] = $cmdof['status_agenda_c_f'];
+			$_POST['updtidstatusfilho_nome'] = $cmdof['nome_status'];
+			$_SESSION['historicofilho'] = $cmdof['historico_c_f']; 
+			$_POST['updtidchamado_filho'] = $cmdof['idchamado_filho'];
+			$_POST['updtidchamado_filho'] = $cmdof['idchamado_filho'];
+			$_POST['observacaocf'] = $cmdof['observacao_c_f'];}
+		}
+		$_POST['hist_statuscf'] = $_POST['updtidstatusfilhoid'];
+		$_POST['hist_nome_status'] = $_POST['updtidstatusfilho_nome'];
+		$_POST['hist_observacao'] = $_POST['observacaocf'];
+	}
+	
+	if(isset($_POST['observacaocf']) AND !empty($_POST['observacaocf']))$_POST['updtobservacaocf'] = $_POST['observacaocf'];
+	
+	if($_POST['hist_statuscf'] != $_SESSION['status_chm_filhoid']) $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' alterou o status do chamado de '.$_POST['hist_nome_status'].' para '.$_SESSION['updt_nome_sts_filho'].' - '.date('d/m/Y H:i').PHP_EOL;
+	if($_POST['hist_observacao'] != $_SESSION['updtobservacaocf']) $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' alterou a observação de '.$_POST['hist_observacao'].' para '.$_SESSION['updtobservacaocf'].' - '.date('d/m/Y H:i').PHP_EOL;
+	
+	//FIM Histórico do chamado Filho
+	
+	//Update Chamado Filho
+	if(isset($_POST['idchamado_f']) AND $_SESSION['updt_nome_sts_filho'] != 'Concluído'){
+		$try = $go->updateMinhaFilaStatusAgenda($_SESSION['idchamado_f'],$_SESSION['status_chm_filhoid'],$_SESSION['historicofilho'],$_SESSION['updtobservacaocf']);
+		$to = $xo->query($try);
+		if($to === "Successfully"){
+			echo "<script>alert('Chamado Filho atualizado com sucesso.');</script>";
+		}else{
+			echo "<script>alert(\"".$to."\");</script>";
+		}
+		unset($_SESSION['idchamado_f'],$_SESSION['historicofilho'],$_SESSION['updtobservacaocf']);
+	}elseif(isset($_POST['idchamado_f']) AND $_SESSION['updt_nome_sts_filho'] == 'Concluído'){
+		$try = $go->updateChamadoFilho_EncerrarAgenda($_SESSION['idchamado_f'],$_SESSION['status_chm_filhoid'],$_SESSION['historicofilho'],date('Y-m-d'),$_SESSION['updtobservacaocf']);
+		$to = $xo->query($try);
+		if($to === "Successfully"){
+			echo "<script>alert('Chamado Filho atualizado com sucesso.');</script>";
+		}else{
+			echo "<script>alert(\"".$to."\");</script>";
+		}
+		unset($_SESSION['status_chm_filhoid'],$_SESSION['historicofilho'],$_SESSION['updtobservacaocf']);
+	}
+	
+?>
+
+<div class="container-fluid">
+	
+	<form method="post">
+		<h1 class="text-center">Validar Retorno da Agenda: Equipe <?php echo $_SESSION['matr_equipe'].' - 
+				<select style="width:55px;" name="dia_escolhido_vld" onchange="this.form.submit()">';
+				$i = -7;while($i <= 1){
+					$mais_dias = date("d", strtotime('+'.$i.' day'));
+					echo '<option value="'.$mais_dias.'"';if($_SESSION['dia_escolhido_vld'] == $mais_dias)echo 'selected';echo '>'.$mais_dias.'</option>'; $i++;
+				} echo'
+				</select> / 
+				<select style="width:55px;" name="mes_escolhido_vld" onchange="this.form.submit()">';
+				$ii = 0;while($ii <= 1){
+					$mais_mes = date("m", strtotime('+'.$ii.' month'));
+					if($ii == 0){ echo '<option value="'.date("m").'">'.date("m").'</option>'; $ii++;
+					}else{ echo '<option value="'.$mais_mes.'"';if($_SESSION['mes_escolhido_vld'] == $mais_mes)echo 'selected';echo '>'.$mais_mes.'</option>'; $ii++;}
+				} echo'
+				</select> / 
+			'.date("Y");
+		?>
+		</h1>
+	</form>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	
+	<?php if($_SESSION['updt_nome_sts_filho'] == 'Concluído'){ echo '
+	<div class="alert alert-warning text-center">
+		<strong>Atenção!</strong> CASO HAJA RDMs BACKUP, FAVOR ENCERRÁ-LAS. <strong>Obrigado!</strong>
+	</div>';}?>
+	<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr class="info">
+				<th class="text-nowrap text-center">Ordem</th>
+				<th class="text-nowrap text-center">Chamado</th>
+				<th class="text-nowrap text-center">Atividade</th>
+				<th class="text-nowrap text-center">Nome do Projeto</th>
+				<th class="text-nowrap text-center">Cidade</th>
+				<th class="text-nowrap text-center">Status</th>
+				<th class="text-nowrap text-center">Observação</th>
+				<th class="text-nowrap text-center">RDM</th>
+				<th class="text-nowrap text-center">RDM Backup</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php
+		$try = $go->buscarAgenda_Equipe_Data_Validacao($_SESSION['matr_equipe'],$_SESSION['dia_agd_vld']);
+		$to = $xo->query($try);$agenda = array();
+		if(!empty($to)){foreach($to as $cmdo){ echo '
+			<tr>
+				<td class="text-center">'.$cmdo['ordem_agenda'].'</td>
+				<td class="text-center"><form method="GET" action="/chamado_detalhe.html" target="_blank"><input title="Detalhe do chamado" type="submit" id="'.$cmdo['chamado'].'" name="chamado" value="'.$cmdo['chamado'].'" style="display:none;"><a style="cursor: pointer" onclick="$(\'#'.$cmdo['chamado'].'\').click();">'.$cmdo['chamado'].'</a></input></form></td>
+				<td class="text-center"><div style="width:150px;">'.$cmdo['nome_tipo'].'</div></td>
+				<td class="text-center"><div style="width:300px;"><form action="'.$cmdo['caminho'].'" target="_blank"><input title="Arquivo do projeto" type="submit" id="'.$cmdo['chamado'].'pj'.'" style="display:none;"><a style="cursor: pointer;" onclick="$(\'#'.$cmdo['chamado'].'pj'.'\').click();">'.$cmdo['nome_projeto'].'</a></input></form></div></td>
+				<td class="text-center">'.$cmdo['nome_cidade'].'</td>
+				<form method="post" autocomplete="off">
+				<input type="hidden" name="idfilho" value="'.$cmdo['idchamado_filho'].'">
+				<td class="text-nowrap text-center">
+					<select style="width:200px;" class="form-control" title="Status do chamado" name="status_chm_filhoid" onchange="this.form.submit()">
+						<option class="form-control" value="">Status do chamado</option>';
+						$try = $go->buscarStatus_Validacao();$to = $xo->query($try); if(!empty($to)){foreach($to as $stt){ echo'
+						<option class="form-control" value="'.$stt['idstatus'].'" ';
+						if(isset($cmdo['idstatus']) AND $cmdo['idstatus'] == $stt['idstatus'])echo ' selected';echo '>'.$stt['nome_status'].'</option>';}}; echo ' 
+					</select>
+				</td>
+				<td class="text-nowrap text-center">
+					<textarea rows="2" style="width:300px;" type="text" class="form-control" name="observacao_agenda" title="Observação" onkeydown="if(event.keyCode == 13){this.form.submit();}">'.$cmdo['observacao_c_f'].'</textarea>
+					<input type="hidden" name="idchamado_f" value="'.$cmdo['idchamado_filho'].'">
+					<input type="hidden" name="chamadopai" value="'.$cmdo['chamado'].'">
+				</td>
+				</form>	
+				<td class="text-nowrap text-center">'.$cmdo['rdm'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['rdm_bkp'].'</td>
+			</tr>';
+			}};?>
+		</tbody>
+	</table>
+	</div>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<h1 class="form-signin-heading text-center">Retorno da Agenda: Equipe <?php echo $_SESSION['matr_equipe'].' - '.$xo->sql_to_br($_SESSION['dia_agd_vld']);?></h1>
+	
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr class="info">
+				<th class="text-nowrap text-center">Ordem</th>
+				<th class="text-nowrap text-center">Chamado</th>
+				<th class="text-nowrap text-center">Atividade</th>
+				<th class="text-nowrap text-center">Nome do Projeto</th>
+				<th class="text-nowrap text-center">Cidade</th>
+				<th class="text-nowrap text-center">Status</th>
+				<th class="text-nowrap text-center">Justificativa</th>
+				<th class="text-nowrap text-center">Observação</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php
+		$try = $go->buscarAgenda_Equipe_Data_Passado($_SESSION['matr_equipe'],$_SESSION['dia_agd_vld']);
+		$to = $xo->query($try);$agenda = array();
+		if(!empty($to)){foreach($to as $cmdo){ echo '
+			<tr>
+				<td class="text-center">'.$cmdo['ordem_agenda'].'</td>
+				<td class="text-center"><form method="GET" action="/chamado_detalhe.html" target="_blank"><input title="Detalhe do chamado" type="submit" id="'.$cmdo['chamado'].'cm'.'" name="chamado" value="'.$cmdo['chamado'].'" style="display:none;"><a style="cursor: pointer" onclick="$(\'#'.$cmdo['chamado'].'cm'.'\').click();">'.$cmdo['chamado'].'</a></input></form></td>
+				<td class="text-center">'.$cmdo['nome_tipo'].'</td>
+				<td class="text-center"><form action="'.$cmdo['caminho'].'" target="_blank"><input title="Arquivo do projeto" type="submit" id="'.$cmdo['chamado'].'prj'.'" style="display:none;"><a style="cursor: pointer;" onclick="$(\'#'.$cmdo['chamado'].'prj'.'\').click();">'.$cmdo['nome_projeto'].'</a></input></form></td>
+				<td class="text-center">'.$cmdo['nome_cidade'].'</td>
+				<td class="text-center">'.$cmdo['status_agenda'].'</td>
+				<td class="text-center">'.$cmdo['justificativa_agenda'].'</td>
+				<td class="text-center">'.$cmdo['observacao_agenda'].'</td>
+			</tr>';
+			}};?>
+		</tbody>
+	</table>
+	</div>
+	
+</div>	
+<?php
+	require_once("footer.html");
+?>

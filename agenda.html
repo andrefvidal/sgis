@@ -1,0 +1,139 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	if(isset($_POST['idfilho'])){
+		$try = $go->updateChamadoFilho_Ordem($_POST['idfilho'],$_POST['ordem_agenda']);
+		$to = $xo->query($try);
+	}
+?>
+<div class="container-fluid">
+
+	<h1 class="form-signin-heading text-center">Agenda Equipe <?php echo $_SESSION['matr_equipe'].' - '.date("d/m/Y",strtotime("+1 days"));?></h1>
+
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-nowrap text-center">Ordem</th>
+				<th class="text-nowrap text-center">Chamado</th>
+				<th class="text-nowrap text-center">Atividade</th>
+				<th class="text-nowrap text-center">Nome do Projeto</th>
+				<th class="text-nowrap text-center">Cidade</th>
+				<th class="text-nowrap text-center">RDM</th>
+				<th class="text-nowrap text-center">Status RDM</th>
+				<th class="text-nowrap text-center">Tempo de Execução</th>
+				<th class="text-nowrap text-center">Horário</th>
+				<th class="text-nowrap text-center">Técnico de Campo</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php
+		$try = $go->buscarAgenda_Equipe_Data($_SESSION['matr_equipe'],date("Y-m-d",strtotime("+1 days")));
+		$to = $xo->query($try);$agenda = array();
+		if(!empty($to)){foreach($to as $cmdo){ echo '
+			<tr>
+				<td class="text-nowrap text-center">
+					<form method="post" autocomplete="off">
+						<input style="width:40px;" class="text-center" type="text" name="ordem_agenda" value="';if(!empty($cmdo['ordem_agenda']))echo $cmdo['ordem_agenda']; echo '">
+						<input type="hidden" name="idfilho" value="'.$cmdo['idchamado_filho'].'">
+					</form>
+				</td>
+				<td class="text-center"><form id="filachamado" method="GET" action="/chamado_detalhe.html" target="_blank"><input type="submit" id="'.$cmdo['chamado'].'" name="chamado" value="'.$cmdo['chamado'].'" style="display:none;"><a style="cursor: pointer" onclick="$(\'#'.$cmdo['chamado'].'\').click();">'.$cmdo['chamado'].'</a></input></form></td>
+				<td class="text-center"><div style="width:100px;">'.$cmdo['nome_tipo'].'</div></td>
+				<td class="text-center"><div style="width:300px;"><form action="'.$cmdo['caminho'].'" target="_blank"><input type="submit" id="'.$cmdo['chamado'].'prj'.'" style="display:none;"/><a style="cursor: pointer" onclick="$(\'#'.$cmdo['chamado'].'prj'.'\').click();">'.$cmdo['nome_projeto'].'</a></input></form></div></td>
+				<td class="text-nowrap text-center">'.$cmdo['nome_cidade'].'</td>
+				<td class="text-nowrap text-center">';if($cmdo['cronograma_pcp_bkp'] == date('Y-m-d'))echo $cmdo['rdm_bkp'];else echo $cmdo['rdm']; echo'</td>
+				<td class="text-center"><div style="width:100px;">';if($cmdo['cronograma_pcp_bkp'] == date('Y-m-d'))echo $cmdo['rdm_status_bkp'];else echo $cmdo['rdm_status']; echo'</div></td>
+				<td class="text-nowrap text-center">'.$cmdo['tempo_execucao'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['horario_turno'].'</td>
+				<td class="text-nowrap text-center">'.$cmdo['tecnico_campo'].'</td>
+			</tr>';$agenda[] = $cmdo['tempo_execucao'];}};?>
+		</tbody>
+	</table>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+		<label class="text-right">Tempo necessário para execução das atividades:
+			<?php foreach($agenda as $time){
+				$parsed = date_parse($time);
+				$minutos = $minutos + $parsed['hour'] * 60 + $parsed['minute'];}
+				$horas = floor($minutos / 60);$minutos = $minutos % 60;
+				if($horas != 0)echo $horas." hora(s) e ".$minutos." minutos.";else echo $minutos." minutos.";
+			?>
+		</label>
+		</div>
+	</div>
+	
+	<div class="col-xs-12 col-sm-12" style="margin-top:50px;margin-bottom:15px;">
+		<h1 class="form-signin-heading text-center">Agenda Apoio Equipe <?php echo $_SESSION['matr_equipe'].' - '.date("d/m/Y",strtotime("+1 days"));?></h1>
+	</div>
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-nowrap text-center">Chamado</th>
+				<th class="text-nowrap text-center">Requisitante</th>
+				<th class="text-nowrap text-center">Atividade</th>
+				<th class="text-nowrap text-center">Nome do Projeto</th>
+				<th class="text-nowrap text-center">Cidade</th>
+				<th class="text-nowrap text-center">Cronograma</th>
+				<th class="text-nowrap text-center">RDM</th>
+				<th class="text-nowrap text-center">Status RDM</th>
+				<th class="text-nowrap text-center">Tempo de Execução</th>
+				<th class="text-nowrap text-center">Prioridade</th>
+				<th class="text-nowrap text-center">Horário</th>
+				<th class="text-nowrap text-center">Técnico de Campo</th>
+			</tr>
+		</thead>
+		<tbody>
+	<?php
+		$try = $go->buscarAgendaApoio_Equipe_Data($_SESSION['matr_equipe'],date("Y-m-d",strtotime("+1 days")));
+		$to = $xo->query($try);$agenda_apoio[] = array();
+		if(!empty($to)){foreach($to as $cmdof){ echo '
+			<tr>
+				<td class="text-center"><form id="filachamado" method="GET" action="/update_chamado_filho.html"><input type="submit" id="'.$cmdof['chamado'].'" name="idchamadofilho" value="'.$cmdof['idchamado_filho'].'" style="display:none;"><a style="cursor: pointer" onclick="$(\'#'.$cmdof['chamado'].'\').click();">'.$cmdof['chamado'].'</a></input></form></td>
+				<td class="text-nowrap text-center">'.$cmdof['solicitante'].'</td>
+				<td class="text-nowrap text-center">'.$cmdof['nome_tipo'].'</td>
+				<td class="text-nowrap text-center">'.$cmdof['nome_projeto'].'</td>
+				<td class="text-nowrap text-center">'.$cmdof['nome_cidade'].'</td>
+				<td class="text-nowrap text-center">';if(!empty($cmdof['cronograma_pcp']))echo $xo->sql_to_br($cmdof['cronograma_pcp']); echo'</td>
+				<td class="text-nowrap text-center">'.$cmdof['rdm'].'</td>
+				<td class="text-nowrap text-center">'.$cmdof['rdm_status'].'</td>
+				<td class="text-nowrap text-center">'.$cmdof['tempo_exe_apoio'].'</td>
+				<td class="text-nowrap text-center">'.$cmdof['nome_prioridade'].'</td>
+				<td class="text-nowrap text-center">'.$cmdof['horario_turno'].'</td>
+				<td class="text-nowrap text-center">'.$cmdof['tecnico_campo'].'</td>
+			</tr>';$agenda_apoio[] = $cmdof['tempo_exe_apoio'];}};?>
+		</tbody>
+	</table>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+		<label class="text-right">Tempo necessário para execução das atividades:
+			<?php foreach($agenda_apoio as $time_apoio){
+				$parsed_apoio = date_parse($time_apoio);
+				$minutos_apoio = $minutos_apoio + $parsed_apoio['hour'] * 60 + $parsed_apoio['minute'];}
+				$horas_apoio = floor($minutos_apoio / 60);$minutos_apoio = $minutos_apoio % 60;
+				if($horas_apoio != 0)echo $horas_apoio." hora(s) e ".$minutos_apoio." minutos.";else echo $minutos_apoio." minutos.";
+			?>
+		</label>
+		</div>
+	</div>
+	<div class="col-xs-12 col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+</div>
+<?php
+	require_once("footer.html");
+?>

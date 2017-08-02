@@ -1,0 +1,157 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	//Memória do formulário
+	if(isset($_POST['tipo_fluxo_pai']))if(!empty($_POST['tipo_fluxo_pai'])){
+		$_POST['tipo_fluxo_pai'] = $_POST['tipo_fluxo_pai'];
+		$try = $go->buscarTipo_id($_POST['tipo_fluxo_pai']);$to = $xo->query($try); if(!empty($to)){foreach($to as $tipo){$_POST['nome_fluxo_pai'] = $tipo['nome_tipo'];}}
+	}
+	if(isset($_POST['selectdepartamento']))if(!empty($_POST['selectdepartamento'])){$_POST['selectdepartamento'] = $_POST['selectdepartamento'];}
+	if(isset($_POST['equipe_apoio_fluxo']))if(!empty($_POST['equipe_apoio_fluxo'])){$_POST['equipe_apoio_fluxo'] = $_POST['equipe_apoio_fluxo'];}
+	if(isset($_POST['observacao_fluxo']))if(!empty($_POST['observacao_fluxo'])){$_POST['observacao_fluxo'] = $_POST['observacao_fluxo'];}
+	
+	//Salvando dados no BD
+	if(isset($_POST['salvarFluxoPai'])){
+		$try = $go->inserFluxoPai($_POST['nome_fluxo_pai'],$_SESSION['matr_equipeid'],$_POST['tipo_fluxo_pai'],$_POST['equipe_apoio_fluxo'],$_POST['observacao_fluxo']); 
+		$to = $xo->query($try);
+		if($to === "Successfully"){
+			echo "<script>alert('Fluxograma salvo com sucesso.');</script>";
+		}else{
+			echo "<script>alert(\"".$to."\");</script>";	
+		}
+		unset($_POST['salvarFluxoPai']);
+		//Refresh na página
+		//echo "<script>location.href='fluxograma_pai.html';</script>";
+	}
+	//FIM do Salvando dados no BD
+	
+	//Deletando Arquivo
+	if(isset($_POST['deletarFluxoPai'])){
+		$try = $go->deleFluxoPai_id($_POST['deletarFluxoPai']); $to = $xo->query($try);
+		if($to === "Successfully"){echo "<script>alert(\"Fluxo Pai deletado com sucesso.\");</script>";}else echo "<script>alert(\"".$to."\");</script>";
+		$to = 0; unset($_POST['deletarFluxoPai']);}
+	//FIM Deletando Arquivo
+?>
+
+<section class="container-fluid" >
+	
+	<div class="row">
+		<div class="text-center" style="margin-top:15px;margin-bottom:25px;">
+			<h1>Cadastro de Fluxograma para abertura de chamado apoio</h1>
+		</div>
+	</div>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<div class="col-xs-12 col-sm-4"><label>Equipe Solicitante</label></div>
+		<div class="col-xs-12 col-sm-4"><label>Nome Fluxograma</label></div>
+		<div class="col-xs-12 col-sm-4"><label>Tipo de Atividade</label></div>
+	</div>
+	<div class="row">
+		<form method="post">
+		<div class="col-xs-12 col-sm-4">
+			<input type="text" class="form-control" title="Equipe Fluxograma Pai" name="equipe_fluxo_pai" value="<?php echo $_SESSION['matr_equipe'];?>" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<input type="text" class="form-control" title="Nome Fluxograma Pai" value="<?php if(isset($_POST['nome_fluxo_pai'])) echo $_POST['nome_fluxo_pai'];?>" readonly required>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" title="Tipo de atividade" name="tipo_fluxo_pai" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Tipo de atividade</option>
+				<?php $try = $go->buscarTipo();$to = $xo->query($try); if(!empty($to)){foreach($to as $tipo){ echo '
+				<option class="form-control" value="'.$tipo['idtipo'].'"'; if(isset($_POST['tipo_fluxo_pai']))if($_POST['tipo_fluxo_pai'] == $tipo['idtipo'])echo ' selected'; echo '>'.$tipo['nome_tipo'].'</option>';}}
+				?>
+			</select>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4"><label>Departamento Chamado Filho</label></div>
+		<div class="col-xs-12 col-sm-4"><label>Equipe Chamado Filho</label></div>
+	</div>
+	<div class="row">
+		<form method="post">
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" name="selectdepartamento" onchange="this.form.submit()">
+				<option class="form-control" value="">Selecionar Departamento</option>
+				<?php $try = $go->buscarDepartamento();$to = $xo->query($try); if(!empty($to)){foreach($to as $depart){ echo'
+				<option class="form-control" value="'.$depart['iddepartamento'].'"'; if(isset($_POST['selectdepartamento']))if($_POST['selectdepartamento'] == $depart['iddepartamento'])echo ' selected'; echo '>'.$depart['nome_departamento'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-4">
+			<select class="form-control" name="equipe_apoio_fluxo" required>
+				<option class="form-control" value="">Selecionar Equipe</option>
+				<?php if(!empty($_POST['selectdepartamento'])){
+				$try = $go->buscarEquipe_id($_POST['selectdepartamento']);$to = $xo->query($try);}
+				if(!empty($to)){foreach($to as $equipe){ echo'
+				<option class="form-control" value="'.$equipe['idequipe'].'"';
+				if(isset($_POST['equipe_apoio_fluxo']))if($_POST['equipe_apoio_fluxo'] == $equipe['idequipe'])echo " selected"; echo ">".$equipe['nome_equipe'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-12"><label>Observação Padrão</label></div>
+	</div>
+	<div class="row">  
+		<div class="col-xs-12 col-sm-12" >
+			<textarea rows="2" type="text" class="form-control" name="observacao_fluxo" title="Observação"><?php if(isset($_POST['observacao_fluxo'])) echo $_POST['observacao_fluxo'];?></textarea>
+		</div>
+	</div>
+		
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button type="submit" class="btn btn-success btn-sm btn-block" title="Controle" name="salvarFluxoPai">Salvar Fluxograma Pai</button>
+		</div>
+		</form>
+	</div>
+
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="text-center" style="margin-top:15px;margin-bottom:25px;">
+			<h1>Lista dos Fluxogramas Cadastrados</h1>
+		</div>
+	</div>
+	
+	<div class="table-responsive">          
+	<table class="table table-hover table-bordered">
+		<thead>
+			<tr>
+				<th class="text-center">Nome Fluxograma</th>
+				<th class="text-center">Equipe Solicitante</th>
+				<th class="text-center">Tipo Atividade</th>
+				<th class="text-center">Equipe Solicitada</th>
+				<th class="text-center">Observação Padrão</th>
+				<th class="text-center">Deletar?</th>
+			</tr>
+		</thead>
+		<tbody>
+		<?php $try = $go->buscarFluxogramaPai_Equipe($_SESSION['matr_equipe']);$to = $xo->query($try); if(!empty($to)){foreach($to as $fluxo){ echo '
+			<tr>
+				<td class="text-center">'.$fluxo['nome_fluxograma'].'</td>
+				<td class="text-center">'.$fluxo['equipe_solicitante'].'</td>
+				<td class="text-center">'.$fluxo['nome_tipo'].'</td>
+				<td class="text-center">'.$fluxo['equipe_apoio'].'</td>
+				<td class="text-center">'.$fluxo['observacao_fluxo'].'</td>
+				<td class="text-center">';if($_SESSION['matr_nivel'] = 3){echo '<form method="post"><button class="btn" type="submit" title="Deletar" name="deletarFluxoPai" value="'.$fluxo['idfluxograma_pai'].'"><span class="fa fa-eraser fa-lg"></span></button></form>';}echo'</th>
+			</tr>';}}
+		?>
+		</tbody>
+	</table>
+	</div>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+</section>
+
+<?php require_once("footer.html"); ?>

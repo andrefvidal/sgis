@@ -1,0 +1,123 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	if(isset($_POST['chamadopai']) AND !empty($_POST['chamadopai'])){$_SESSION['chamadopai'] = $_POST['chamadopai'];}
+	if(isset($_POST['statusfilhoid']) AND !empty($_POST['statusfilhoid'])){$_SESSION['statusfilhoid'] = $_POST['statusfilhoid'];}
+	//Buscar no nome do Status pelo ID
+	$try = $go->buscarStatus_id($_SESSION['statusfilhoid']);$to = $xo->query($try);
+	if(!empty($to)){foreach($to as $sts){$_SESSION['updt_nomestatusfilho'] = $sts['nome_status'];}}
+	if(isset($_POST['editar_cmd_filho']) AND !empty($_POST['editar_cmd_filho'])){unset($_SESSION['statusfilhoid'],$_SESSION['updt_nomestatusfilho']);$_SESSION['editar_cmd_filho'] = $_POST['editar_cmd_filho'];}
+	
+	//Histórico do chamado Filho
+	if(isset($_POST['update_statusfilhoid'])){
+		$try = $go->buscarChamadoFilho_CPai($_SESSION['chamadopai']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $cmdof){ 
+			$_POST['updtidstatusfilhoid'] = $cmdof['status_agenda_c_f'];
+			$_POST['updtidstatusfilho_nome'] = $cmdof['nome_status'];
+			$_SESSION['historicofilho'] = $cmdof['historico_c_f']; 
+			$_POST['updtidchamado_filho'] = $cmdof['idchamado_filho'];}
+		}
+		$_POST['hist_statuscf'] = $_POST['updtidstatusfilhoid'];
+		$_POST['hist_nome_status'] = $_POST['updtidstatusfilho_nome'];
+
+		if($_POST['hist_statuscf'] != $_SESSION['statusfilhoid']) $_SESSION['historicofilho'] .= 'O analista '.$_SESSION['matr_nome'].' alterou o status do chamado de '.$_POST['hist_nome_status'].' para '.$_SESSION['updt_nomestatusfilho'].' - '.date('d/m/Y H:i').PHP_EOL;
+	}
+	//FIM Histórico do chamado Filho
+	
+	//Update Chamado Filho
+	if(isset($_POST['update_statusfilhoid'])){
+		$try = $go->updateMinhaFilaStatusFilho($_SESSION['editar_cmd_filho'],$_SESSION['statusfilhoid'],$_SESSION['historicofilho']);
+		$to = $xo->query($try);
+		if($to === "Successfully"){
+			echo "<script>alert('Chamado Filho atualizado com sucesso.');</script>";
+		}else{
+			echo "<script>alert(\"".$to."\");</script>";
+		}
+		unset($_SESSION['statusfilhoid'],$_SESSION['historicofilho'],$_POST['update_statusfilhoid']);
+	}
+?>
+
+<div class="container-fluid">
+
+	<div class="col-xs-12 col-sm-12" style="margin-bottom:20px;">
+		<h1 class="form-signin-heading text-center">Chamados Cancelados/Reprovados - Equipe <?php echo $_SESSION['matr_equipe'];?></h1>
+	</div>
+	
+	<div class="row">
+		<div class="col-xs-12 col-sm-12" style="margin-top:-15px;margin-bottom:-15px;">
+           	<hr class="hr">
+		</div>
+	</div>
+	
+	<div class="row">  
+	<div class="col-xs-12 col-sm-12" >
+	<div class="table-responsive" id="divConteudo">          
+		<table class="table table-hover" id="tabela">
+			<thead>
+				<tr>
+					<th class="text-center">Analista</th>
+					<th class="text-center">Chamado</th>
+					<th class="text-center">Projeto</th>
+					<th class="text-center">Cidade</th>
+					<th class="text-center">Data Resolução</th>
+					<th class="text-center">Status</th>
+				</tr>
+				<tr>
+					<th><input class="form-control" type="text" id="txtColuna1"/></th>
+					<th><input class="form-control" type="text" id="txtColuna2"/></th>
+					<th><input class="form-control" type="text" id="txtColuna3"/></th>
+					<th><input class="form-control" type="text" id="txtColuna4"/></th>
+					<th><input class="form-control" type="text" id="txtColuna5"/></th>
+					<th><input class="form-control" type="text" id="txtColuna6"/></th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php $try = $go->buscarChamadoFilho_Equipe_CancelRepro($_SESSION['matr_equipe'],$_SESSION['flt_cl_flo'],$_SESSION['flt_cl_flo_or']);$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $cmdof){ echo'
+				<tr class="info">
+					<td class="text-center">'.$cmdof['nome'].'</td>
+					<td class="text-center"><form method="GET" action="/chamado_detalhe.html" target="_blank"><input type="submit" id="'.$cmdof['chamado'].'cf'.'" name="chamado" value="'.$cmdof['chamado'].'" style="display:none;"/><a style="cursor: pointer" onclick="$(\'#'.$cmdof['chamado'].'cf'.'\').click();">'.$cmdof['chamado'].'</a></input></form></td>
+					<td class="text-center">'.$cmdof['nome_projeto'].'</td>
+					<td class="text-center">'.$cmdof['nome_cidade'].'</td>
+					<td class="text-center">';if(!empty($cmdof['data_aprovacao']))echo $xo->sql_to_br($cmdof['data_aprovacao']); echo'</td>
+					<td class="text-center">'.$cmdof['status_pai'].'</td>
+					</td>
+				</tr>
+			';}}?>
+			</tbody>
+		</table>
+	</div>
+	</div>
+	</div>
+	<div class="col-xs-12 col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<div class="container">
+		<div class="modal fade" id="update_status" role="dialog">
+			<div class="modal-dialog">
+			<!-- Modal content-->
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title text-center">Deseja alterar o status do chamado?</h4>
+				</div>
+				<div class="modal-body">
+				<div class="row">    
+					<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+						<form method="post">
+							<button class="btn btn-block" type="submit" title="Atualizar" name="update_statusfilhoid" value="<?php $_SESSION['editar_cmd_filho'];?>"><span class="fa fa-floppy-o fa-lg"></span></button>
+						</form>
+					</div>
+				</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+				</div>
+			</div>
+			</div>
+		</div>
+	</div>
+</div>
+<?php
+	require_once("footer.html");
+?>

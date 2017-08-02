@@ -1,0 +1,106 @@
+</div>
+</body>
+<footer class="footer">
+    <div class="container">
+		<a href="#inicio" title="Inicio" class="nav navbar-nav navbar-right">
+			<i class="fa fa-chevron-up"></i>
+		</a>
+		<img class="img-responsive center-block" src="img/telefonica-vivo.png" />
+	</div>
+</footer>
+
+<script src="js/bootstrap.min.js"></script>
+<script src="js/jquery.inputmask.js"></script>
+<script src="js/inputmask.js"></script>
+<script src="js/inputmask.date.extensions.js"></script>
+<script src="js/smoothscroll.js"></script>
+<script src="js/ie10-viewport-bug-workaround.js"></script>
+<script src="js/formataData.js"></script>
+
+<script language="JavaScript" type="text/javascript">
+
+//$(document).ready(function () {
+//   $('input').keypress(function (e) {
+//        var code = null;
+//        code = (e.keyCode ? e.keyCode : e.which);                
+//        return (code == 13) ? false : true;
+//   });
+//});
+
+//window.onunload = function(){
+//unloadP('UniquePageNameHereScroll')
+//}
+
+$(function(){
+    $("#tabela input").keyup(function(){       
+        var index = $(this).parent().index();
+        var nth = "#tabela td:nth-child("+(index+1).toString()+")";
+        var valor = $(this).val().toUpperCase();
+        $("#tabela tbody tr").show();
+        $(nth).each(function(){
+            if($(this).text().toUpperCase().indexOf(valor) < 0){
+                $(this).parent().hide();
+            }
+        });
+    });
+ 
+    $("#tabela input").blur(function(){
+        $(this).val("");
+    });
+});
+
+$(function(){
+    $("#tabela2 input").keyup(function(){       
+        var index = $(this).parent().index();
+        var nth = "#tabela2 td:nth-child("+(index+1).toString()+")";
+        var valor = $(this).val().toUpperCase();
+        $("#tabela2 tbody tr").show();
+        $(nth).each(function(){
+            if($(this).text().toUpperCase().indexOf(valor) < 0){
+                $(this).parent().hide();
+            }
+        });
+    });
+ 
+    $("#tabela2 input").blur(function(){
+        $(this).val("");
+    });
+});
+
+$(document).ready(function(){
+  // Add smooth scrolling to all links in navbar + footer link
+  $(".navbar a, footer a[href='#inicio']").on('click', function(event) {
+    // Make sure this.hash has a value before overriding default behavior
+    if (this.hash !== "") {
+      // Prevent default anchor click behavior
+      event.preventDefault();
+
+      // Store hash
+      var hash = this.hash;
+
+      // Using jQuery's animate() method to add smooth page scroll
+      // The optional number (900) specifies the number of milliseconds it takes to scroll to the specified area
+      $('html, body').animate({
+        scrollTop: $(hash).offset().top
+      }, 900, function(){
+   
+        // Add hash (#) to URL when done scrolling (default click behavior)
+        window.location.hash = hash;
+      });
+    } // End if
+  });
+  
+  $(window).scroll(function() {
+    $(".slideanim").each(function(){
+      var pos = $(this).offset().top;
+
+      var winTop = $(window).scrollTop();
+        if (pos < winTop + 600) {
+          $(this).addClass("slide");
+        }
+    });
+  });
+})
+</script>
+
+</html>

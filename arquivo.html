@@ -1,0 +1,113 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	//Memoria das variaveis GET
+	$_SESSION['chamado'] = $_GET['chamado'];
+	
+	if(isset($_POST['slv_arq'])){
+		$upfile = $_FILES["arquivo"];
+		// Verifica se o arquivo foi selecionado
+		if (!empty($upfile["name"])) {
+			$error = array();
+			// Tamanho máximo do arquivo em bytes
+			$tamanho = 10000000;
+			// Verifica se o arquivo é uma texto ou planilha
+			if(!preg_match("/\.(jpg|jpeg|gif|png|doc|docx|pdf|xls|xlsm|xlsx|msg|zip|7zip|html|txt){1}$/i", $upfile["name"])){
+				$error[0] = "<script>alert('Certifique-se que esse é um arquivo de texto ou planilha.');</script>";}
+			// Verifica se o tamanho do arquivo é maior que o tamanho permitido
+			if($upfile["size"] > $tamanho) {
+				$error[1] = "<script>alert('O arquivo deve ter no máximo ".$tamanho." bytes');</script>";}
+			// Se não houver nenhum erro
+			if (count($error) == 0) {
+				// Pega extensão do arquivo
+				preg_match("/\.(jpg|jpeg|gif|png|doc|docx|pdf|xls|xlsm|xlsx|msg|zip|7zip|html|txt){1}$/i", $upfile["name"], $ext);
+				// Gera a extensao do arquivo
+				$ext_arquivo = $ext[1];
+				// Gera o nome do arquivo
+				$nome_arquivo = preg_replace("[']", "", $upfile["name"]);
+				// Caminho de onde ficará o arquivo
+				$caminho_arquivo = "arquivos/" . preg_replace("[']", "", $upfile["name"]);
+				// Insere os dados no banco
+				$try = $go->inserArquivo($nome_arquivo,$caminho_arquivo,$upfile["size"],$ext_arquivo,$_SESSION['matr_usuario'],$_POST['chamado'],$_POST['observacao_arq'],$_POST['projeto']);
+				$to = $xo->query($try);unset($_POST['slv_arq']);
+				// Se os dados forem inseridos com sucesso
+				if($to === "Successfully"){
+					// Faz o upload do arquivo para seu respectivo caminho
+					move_uploaded_file($upfile["tmp_name"], $caminho_arquivo);
+					echo "<script>alert(\"Arquivo salvo com sucesso.\");</script>";
+					//Refresh na página
+					echo "<script>history.go(-2);</script>";
+				}else{
+					echo "<script>alert(\"".$to."\");</script>";
+				}
+			}elseif (count($error) != 0) {// Se houver mensagens de erro, exibe-as
+				foreach ($error as $erro) {
+					echo $erro;
+				}
+			}
+		}
+		
+	}
+?>
+
+<div id="arquivo" class="container-fluid">
+	<?php ?>
+    <div class="row">
+    	<div class="text-center">
+    		<h1>Inserir arquivo</h1>
+        </div>
+    </div>
+    <div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+        <div class="col-sm-12">
+        	<hr class="hr">
+        </div>
+    </div>
+    <div class="row">  
+		<div class="col-xs-12 col-sm-3">
+			<a class="btn btn-primary btn-sm btn-block" onClick="history.go(-1)">Voltar</a>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<form action="<?php echo $_SERVER['PHP_SELF'];?>" enctype="multipart/form-data" method="post" name="cadastro">
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<input type="text" class="form-control" maxlength="12" name="chamado" title="Chamado" placeholder="Chamado"
+			value="<?php if(isset($_GET['chamado']))echo $_GET['chamado'];?>" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			</label><input type="checkbox" value="1" name="projeto"><strong>Marcar caso o arquivo seja o projeto do chamado.</strong></label>
+		</div>
+		<div class="col-xs-12 col-sm-6">
+			<input type="hidden" name="MAX_FILE_SIZE" value="10000000"/>
+			<input type="file" class="form-control" name="arquivo" placeholder="Inserir Arquivo" required>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-12"><label>Observação</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-12" >
+			<textarea rows="2" type="text" class="form-control" name="observacao_arq" title="Observação"></textarea>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="slv_arq" value="Salvar">Salvar</button>
+		</div>	
+	</div>
+	</form>
+	
+	<div class="row">
+        <div class="col-sm-12">
+        	<hr class="hr">
+        </div>
+    </div>
+</div>
+
+<?php
+	require_once("footer.html");
+?>

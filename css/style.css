@@ -1,0 +1,248 @@
+html, body {
+    font: 400 14px Lato, sans-serif;
+    line-height: 1.8;
+    background-color: white;
+	height: 100%;
+}
+h1 {
+    font-size: 24px;
+    text-transform: uppercase;
+    color: black;
+}
+h2 {
+    font-size: 24px;
+    text-transform: uppercase;
+    color: black;
+    font-weight: 600;
+    margin-bottom: 30px;
+}
+h4 {
+    font-size: 19px;
+    line-height: 1.375em;
+    color: black;
+    font-weight: 400;
+    margin-bottom: 30px;
+} 
+
+.tbodyboot:after {
+  content: ' ';
+  display: block;
+  height: 15px;
+}
+
+.table-font {
+	font: 400 12px Lato, sans-serif;
+	line-height: 1.8;
+    background-color: white;
+	height: 100%;
+}
+
+.row-centered {
+    text-align:center;
+	margin: 0 0;
+}
+.col-centered {
+    display:inline-block;
+    float:none;
+    /* reset the text-align */
+    text-align:left;
+    /* inline-block space fix */
+    margin-right:-2px;
+	padding-left:-10px;
+}
+.col-centered2 {
+    display:inline-block;
+    float:none;
+    /* reset the text-align */
+    text-align:left;
+    /* inline-block space fix */
+    margin-right:-2px;
+	padding-top:-15px;
+}
+.container-fluid {
+	padding-left: 5%;
+	padding-right: 5%;
+}
+.hr {
+	border: 1px solid #f4511e; 
+    border-radius:0 !important;
+    transition: box-shadow 0.5s;
+}
+/* Sticky footer styles
+      -------------------------------------------------- */
+/* Wrapper for page content to push down footer */
+#wrap {
+  min-height: 82% !important;
+  height: auto !important;
+  height: 100%;
+  /* Negative indent footer by it's height */
+  margin: 0 auto;
+}
+/* Lastly, apply responsive CSS fixes as necessary */
+@media (max-width: 767px) {
+    #footer {
+		max-height:3%;
+		margin-left: -20px;
+		margin-right: -20px;
+		padding-left: 20px;
+		padding-right: 20px;
+    }
+}
+@media (min-height: 768px) {
+	#wrap {
+		min-height: 85% !important;
+		height: auto !important;
+		height: 100%;
+		/* Negative indent footer by it's height */
+		margin: 0 auto;
+	}
+}
+.footer {
+	border: 1px solid RGB(18,130,197); 
+	bottom: 0;
+	width:100%;
+}
+footer .fa-chevron-up {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #f4511e;
+}
+.color-nav{
+	background-color: RGB(18,130,197);
+}
+.navbar .navbar-header{
+	padding-right: 5%;
+}
+.navbar-text{
+	color: #fff !important;
+}
+.navbar .navbar-brand {
+	background-color: RGB(18,130,197);
+    color: #fff !important;
+}
+.navbar li ul li a{
+	color: black !important;
+    background-color: #fff !important;
+	border-bottom: black solid 1px;
+}
+.navbar li a {
+    color: #fff !important;
+}
+.navbar dropdown, .navbar btn-group{
+	background-color: RGB(18,130,197);
+    color: #fff !important;
+}
+.hover li a:hover, .hover li.active a {
+    color: black !important;
+    background-color: #fff !important;
+	
+}
+.navbar dropdown menu-hover li a:hover, .navbar dropdown menu-hover li.active a {
+    color: #fff !important;
+    background-color: black!important;
+}
+.dropdown:hover .dropdown-menu {
+display: block;
+}
+
+/* ==========================================================================
+Pagina 404
+========================================================================== */
+
+.page404 {
+font-family: "Open Sans",sans-serif;
+font-size: 1rem;
+line-height: 1.33333;
+color: #3e3e42;
+background-color: #fff;
+font-weight: 300;
+}
+.text-center {
+    text-align: center;
+}
+.page404 .text-center .text404 {
+    font-size: 9.5rem;
+    color: #2a3134;
+	margin-top: 50px;
+}
+.btn-block-404 {
+    display: block;
+    width: 100%;
+}
+.m-t-1-404 {
+    margin-top: 1.25rem !important;
+}
+
+.btn-primary404 {
+    color: #fff;
+    background-color: #1c9ae8;
+    border-color: #1c9ae8;
+}
+.btn404 {
+    display: inline-block;
+    font-weight: 300;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    border: .0625rem solid transparent;
+    background-position: center center;
+    padding: 0 1.25rem;
+    font-size: 1rem;
+    line-height: 2.375rem;
+    min-width: 6.25rem;
+    border-radius: .25rem;
+    transition: all .2s ease-in-out;
+}
+.btn-lg404 {
+    padding: .625rem 2.5rem;
+    font-size: 1.25rem;
+    line-height: 2.375rem;
+    min-width: 12.5rem;
+    border-radius: .3rem;
+}
+
+
+/* ==========================================================================
+LOGIN 
+========================================================================== */
+.form-signin {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+.form-signin .form-signin-heading,
+.form-signin .checkbox {
+  margin-bottom: 10px;
+}
+.form-signin .checkbox {
+  font-weight: normal;
+}
+.form-signin .form-control {
+  position: relative;
+  height: auto;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 10px;
+  font-size: 16px;
+}
+.form-signin .form-control:focus {
+  z-index: 2;
+}
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}

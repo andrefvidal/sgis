@@ -1,0 +1,51 @@
+<?php
+	require_once("head.html");
+	$go = new sql(); $xo = new dao();
+	
+	
+	if(isset($_POST['agenda_equipe'])){
+		$try = $go->deleteRetornoAgenda_manual();$resu1 = $xo->query($try); 
+		$try = $go->updateRetornoAgenda_manual();$resu2 = $xo->query($try); 
+		$try = $go->updateRetornoAgendaBkp_manual();$resu3 = $xo->query($try); 
+		if($resu1 === "Successfully" AND $resu2 === "Successfully" AND $resu3 === "Successfully"){echo "<script>alert(\"Retorno da agenda atualizado com sucesso.\");</script>";}
+		unset($_POST['agenda_equipe']);
+	}elseif(isset($_POST['agenda_apoio'])){
+		$try = $go->deleteRetornoAgendaApoio_manual();$resu1 = $xo->query($try); 
+		$try = $go->updateRetornoAgendaApoio_manual();$resu2 = $xo->query($try); 
+		$try = $go->updateRetornoAgendaBkpApoio_manual();$resu3 = $xo->query($try);
+		if($resu1 === "Successfully" AND $resu2 === "Successfully"  AND $resu3 === "Successfully"){echo "<script>alert(\"Retorno da agenda apoio atualizado com sucesso.\");</script>";}
+		unset($_POST['agenda_apoio']);
+	}
+?>
+
+<section class="container-fluid" >
+	
+	<div class="row">
+		<div class="text-center" style="margin-top:15px;margin-bottom:25px;">
+			<h1>Atualizar Retorno da Agenda Manualmente</h1>
+        </div>
+    </div>
+	
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+	<form action="" method="post">
+		<div class="row">
+			<div class="col-xs-12 col-sm-6">
+				<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Retorno da Agenda: Equipe 
+				<?php echo $_SESSION['matr_equipe'];?>." name="agenda_equipe">
+			</div>
+			<div class="col-xs-12 col-sm-6">
+				<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Retorno da Agenda Apoio: Equipe 
+				<?php echo $_SESSION['matr_equipe'];?>." name="agenda_apoio" >
+			</div>
+		</div>
+	</form>
+	
+	<?php
+		
+	?>
+</section>
+
+<?php
+	require_once("footer.html");
+?>

@@ -1,0 +1,76 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	//Deletando Arquivo
+	if(isset($_POST['deletarArquivoBiblioteca'])){
+		$try = $go->deleArquivoBiblioteca($_POST['deletarArquivoBiblioteca']); $to = $xo->query($try);
+		if($to === "Successfully"){echo "<script>alert(\"Arquivo deletado com sucesso.\");</script>";}else echo "<script>alert(\"".$to."\");</script>";
+		$to = 0; unset($_POST['deletarArquivoBiblioteca']);}
+	//FIM Deletando Arquivo
+?>
+<div class="container-fluid">
+
+	<h1 class="form-signin-heading text-center">Formulário de pesquisa</h1>
+
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<form method="post" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<label>Pesquisar por Título, palavra-chave, descrição, autor.</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<input type="text" class="form-control" name="nomeprojeto" title="Digite aqui" placeholder="Digite aqui." required></input>
+		</div>
+	</div>
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="pesquisar">Pesquisar</button>
+		</div>
+	</div>
+	</form>
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<?php if(isset($_POST['pesquisar'])) echo'
+	<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-center">Titulo</th>
+				<th class="text-center">Palavra-chave</th>
+				<th class="text-center">Autor</th>
+				<th class="text-center">Link</th>
+				<th class="text-center">Remover?</th>
+			</tr>
+		</thead>
+		<tbody>';
+		if(isset($_POST['pesquisar'])){$try = $go->buscarMaterial_Filtro($_POST['nomeprojeto']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $arq){ echo '
+			<tr>
+				<td class="text-center">'.$arq['titulo'].'</td>
+				<td class="text-center">'.$arq['palavra_chave'].'</td>
+				<td class="text-center">'.$arq['autor'].'</td>
+				<td class="text-center"><a href="'.$arq['caminho'].'">Link</a></td>
+				<td class="text-center">';if($arq['idautor'] == $_SESSION['matr_usuarioid']){echo '<form method="post"><button class="btn" type="submit" title="Deletar" name="deletarArquivoBiblioteca" value="'.$arq['idbiblioteca'].'"><span class="fa fa-eraser fa-lg"></span></button></form>';}echo'</th>
+			</tr>';}}}
+		if(isset($_POST['pesquisar'])) echo'
+		</tbody>
+	</table>
+	</div>'; $to = 0;$try =0;
+	?>
+</div>	
+<?php
+	require_once("footer.html");
+?>

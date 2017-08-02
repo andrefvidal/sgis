@@ -1,0 +1,208 @@
+<?php
+require_once("head.html");
+//Cria uma nova instancia das classes SQL e DAO
+$go = new sql();$xo = new dao();
+
+//Verifica um número de chamado disponível
+if(isset($_POST['tipo_atividade'])){
+	/*$try = $go->buscarControle_Tipo_Equipe($_SESSION['matr_equipeid'],$_POST['tipo_atividade']);
+		$to = $xo->query($try);if(!empty($to)){foreach($to as $control){ 
+		$_POST['chamado'] = $control['empresa_controle'].date('Y').$control['depart_controle'].$control['equipe_controle'].$control['tipo_controle'].$control['ultimo_numero'];
+		$idcontrole = $control['idcontrole'];$n_controle = $control['ultimo_numero'];
+	}}*/
+	$try = $go->buscarFluxoPai_Tipo_id($_POST['tipo_atividade'],$_SESSION['matr_equipeid']); $to = $xo->query($try);if(!empty($to)){foreach($to as $fluxo){ 
+		if(!empty($fluxo['idfluxograma_pai']))
+			$equipe_apoio = $fluxo['equipeapoio_fluxo'];
+			$obs_c_f = $fluxo['observacao_fluxo'];
+	}}
+	/*$try = $go->buscarSla_Tipo_id($_POST['tipo_atividade'],$_SESSION['matr_equipeid']); $to = $xo->query($try);if(!empty($to)){foreach($to as $sla){ 
+		if(empty($sla['sla_vencimento']))$_POST['vencimento'] = NULL;else $_POST['vencimento'] = date('Y-m-d', strtotime(date('Y-m-d').' + '.$sla['sla_vencimento'].' days'));
+	}}*/
+}
+
+//Memória do formulário
+if(isset($_POST['chamado']))if(!empty($_POST['chamado'])){$_POST['chamado'] = $_POST['chamado'];}
+if(isset($_POST['projeto']))if(!empty($_POST['projeto']))$_POST['projeto'] = preg_replace("[']", "", $_POST['projeto']);
+if(isset($_POST['descricao']))if(!empty($_POST['descricao']))$_POST['descricao'] = preg_replace("[']", "", $_POST['descricao']);
+if(isset($_POST['vencimento']))if(!empty($_POST['vencimento']))$_POST['vencimento'] = $_POST['vencimento'];
+if(isset($_POST['autor']))if(!empty($_POST['autor']))$_POST['autor'] = $_POST['autor'];
+if(isset($_POST['tipo_atividade']))if(!empty($_POST['tipo_atividade']))$_POST['tipo_atividade'] = $_POST['tipo_atividade'];
+if(isset($_POST['prioridade']))if(!empty($_POST['prioridade']))$_POST['prioridade'] = $_POST['prioridade'];
+if(isset($_POST['estado']))if(!empty($_POST['estado']))$_POST['f_c_estado'] = $_POST['estado'];
+if(isset($_POST['cidade']))if(!empty($_POST['cidade']))$_POST['f_c_cidade'] = $_POST['cidade'];
+if(isset($_POST['lmt_material']))if(!empty($_POST['lmt_material']))$_POST['f_c_lmt_material'] = $_POST['lmt_material'];
+if(isset($_POST['data_entrega']))if(!empty($_POST['data_entrega']))$_POST['data_entrega_c_p'] = $_POST['data_entrega'];
+
+//Salvando dados no BD
+$try = $go->buscarStatus_Nome('Aguardando aprovação');$to = $xo->query($try);
+if(!empty($to)){foreach($to as $stts){ $_POST['idstatus_cp'] = $stts['idstatus'];}}
+
+if(isset($_POST['slvChamado'])){
+	//Inserindo Arquivo no DB
+	$try = $go->inserChamadoPai($_POST['chamado'],$_POST['autor'],$_POST['projeto'],$_POST['descricao'],$xo->br_to_sql($_POST['vencimento']),date('Y-m-d'),$xo->br_to_sql($_POST['data_entrega_c_p']),
+	$xo->br_to_sql($_POST['f_c_lmt_material']),$_POST['tipo_atividade'],$_SESSION['matr_usuarioid'],$_POST['prioridade'],$_POST['f_c_cidade'],$_POST['f_c_estado'],$_POST['idstatus_cp'],$_SESSION['matr_equipeid']); 
+	$salvarchamado = $xo->query($try);
+	if($salvarchamado === "Successfully"){
+		//Incrementando controle de chamados
+		//if(!empty($idcontrole))$try = $go->updateControle($idcontrole,++$n_controle);$to = $xo->query($try);
+		
+		echo "<script>alert('Chamado criado com sucesso.');</script>";
+		//Inserindo chamado filho via fluxopai
+		if(!empty($equipe_apoio)){
+			$try = $go->inserChamadoFilho_FluxoPai($_POST['chamado'],$_SESSION['matr_usuarioid'],$equipe_apoio,$obs_c_f); $to = $xo->query($try);
+			if($to === "Successfully")echo "<script>alert('Chamado Filho criado com sucesso.');</script>";else echo "<script>alert(\"".$to."\");</script>";
+		}
+		//Inserindo projeto do chamado
+		$tryyng = $xo->salvarArquivo($_POST['chamado'],$_POST['observacao'],'1');if(!empty($tryyng)) echo $tryyng;
+	}else{
+		echo "<script>alert(\"".$salvarchamado."\");</script>";
+	}
+	
+	//Limpando o botão salvar do formulário
+	unset($_POST['slvChamado']);
+	//Manda para pagina Caixa de Entrada
+	if($salvarchamado === "Successfully")echo "<script>location.href='cad_chamado.html';</script>";
+}
+?>
+
+<div class="container-fluid">
+	<?php ?>
+	<?php  
+		if(isset($_POST['tipo_atividade']) AND empty($equipe_apoio)){ 
+			echo '<div class="alert alert-info">
+					<strong>Informação!</strong> Ainda não existe um fluxograma Pai cadastrado para esse tipo de atividade.
+				</div>';} 
+		/*		
+		if(isset($_POST['tipo_atividade']) AND empty($idcontrole)){ 
+			echo '<div class="alert alert-info">
+					<strong>Informação!</strong> Ainda não existe um controle de chamados cadastrado para esse tipo de atividade.
+				</div>';}
+		if(isset($_POST['tipo_atividade']) AND empty($_POST['vencimento'])){ 
+			echo '<div class="alert alert-warning">
+					<strong>Importante!</strong> Ainda não foi definido um SLA para esse tipo de atividade.
+				</div>';}
+		*/
+	?>
+	
+	<h1 class="form-signin-heading text-center">Cadastrar Chamado</h1>
+       
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	
+	<form method="post" enctype="multipart/form-data" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Chamado</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Tipo de atividade</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Autor</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Vencimento</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<input type="text" class="form-control" maxlength="12" title="Chamado" pattern="^\S+$" <?php if(empty($idcontrole))echo ' name="chamado"';?> value="<?php if(isset($_POST['chamado']))echo $_POST['chamado'];?>" <?php if(!empty($idcontrole))echo ' disabled';?> 
+			required>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Tipo de atividade" name="tipo_atividade" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Tipo de atividade</option>
+				<?php $try = $go->buscarTipo();$to = $xo->query($try); if(!empty($to)){foreach($to as $tipo){ echo '
+				<option class="form-control" value="'.$tipo['idtipo'].'"'; if(isset($_POST['tipo_atividade']))if($_POST['tipo_atividade'] == $tipo['idtipo'])echo ' selected'; echo '>'.$tipo['nome_tipo'].'</option>';}}
+				?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input class="form-control" title="Autor" name="autor" onchange="this.form.submit()" value="<?php echo $_SESSION['matr_nome'];?>" readonly>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" name="vencimento" title="Vencimento" placeholder="Vencimento" value="<?php if(isset($_POST['vencimento']))echo $_POST['vencimento'];?>" required>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4"><label>Nome do projeto</label></div>
+	</div>
+	<div class="row">  
+		<div class="col-xs-12 col-sm-12" >
+			<input type="text" class="form-control" name="projeto" title="Nome do projeto" placeholder="Nome do projeto" <?php if(isset($_POST['projeto'])) echo 'value="'.$_POST['projeto'].'"';?> required>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4"><label>Descrição</label></div>
+	</div>
+	<div class="row">  
+		<div class="col-xs-12 col-sm-12" >
+			<textarea rows="2" type="text" class="form-control" name="descricao" title="Descrição" placeholder="Descrição" required><?php if(isset($_POST['descricao'])) echo ''.$_POST['descricao'].'';?></textarea>
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Previsão Logistíca</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Prioridade</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Estado</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Cidade</label></div>
+	</div>
+	
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" id="lmt_material" class="form-control" name="lmt_material" title="Previsão Logistíca" placeholder="Previsão Logistica" value="<?php if(isset($_POST['f_c_lmt_material']))echo $_POST['f_c_lmt_material'];?>">
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Prioridade" name="prioridade"  required>
+				<option class="form-control" value="">Prioridade</option>
+				<?php $try = $go->buscarPrioridade();$to = $xo->query($try);
+					if(!empty($to)){foreach($to as $prior){ 
+					echo '<option class="form-control" value="'.$prior['idprioridade'].'"';if(isset($_POST['prioridade']))if($_POST['prioridade'] == $prior['idprioridade'])echo ' selected';echo '>'.$prior['nome_prioridade'].'</option>';}}
+				?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" name="estado" onchange="this.form.submit()" required>
+				<option class="form-control" value="">Escolha o estado</option>
+				<?php $try = $go->buscarEstado();$to = $xo->query($try);
+					if(!empty($to)){foreach($to as $std){ 
+					echo '<option class="form-control" value="'.$std['idestado'].'"';if(isset($_POST['f_c_estado']))if($_POST['f_c_estado'] == $std['idestado'])echo ' selected'; echo '>'.$std['estado'].'</option>';}}
+				?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input class="form-control" type="text" list="cidades" name="cidade" title="Digite a cidade desejada." placeholder="Digite a cidade desejada." value="<?php if(isset($_POST['f_c_cidade']))echo $_POST['f_c_cidade'];?>" required>
+			<datalist id="cidades">
+				<?php $try = $go->buscarCidade_id($_POST['f_c_estado']);$to = $xo->query($try);
+					if(!empty($to)){foreach($to as $cdd){ echo '<option value="'.$cdd['nome_cidade'].'">';}}
+				?>
+			</datalist>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3"><label>Prazo de Entrega</label></div>
+		<div class="col-xs-12 col-sm-3"><label>Inserir Arquivo</label></div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" id="vcmento" class="form-control" name="data_entrega" title="Prazo de Entrega" placeholder="Prazo de Entrega" value="<?php if(isset($_POST['data_entrega_c_p']))echo $_POST['data_entrega_c_p'];?>" required>
+		</div>
+		<div class="col-xs-12 col-sm-9">
+			<input type="hidden" name="MAX_FILE_SIZE" value="10000000"/>
+			<input type="hidden" name="observacao" value="Arquivo do projeto."/>
+			<input type="file" class="form-control" name="arquivo" placeholder="Inserir Arquivo" required>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12">
+			<hr class="hr">
+		</div>
+	</div>
+
+	<div class="row">    
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="slvChamado">Salvar chamado</button>
+		</div>
+	</div>
+	</form>
+
+	<div class="col-sm-12" style="margin-top:15px;margin-bottom:15px;"></div>
+	
+</div>
+<?php require_once("footer.html"); ?>

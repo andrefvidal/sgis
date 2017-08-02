@@ -1,0 +1,210 @@
+<?php
+	require_once("head.html");
+	$go = new sql();$xo = new dao();
+	
+	if(isset($_POST['selectdepartamento']))if(!empty($_POST['selectdepartamento']))$_SESSION['selectdepartamento'] = $_POST['selectdepartamento'];
+	if(isset($_POST['equipe_apoio']))if(!empty($_POST['equipe_apoio']))$_SESSION['equipe_apoio'] = $_POST['equipe_apoio'];
+?>
+<div class="container-fluid">
+
+	<h1 class="form-signin-heading text-center">Formulário de pesquisa - Chamado Filho</h1>
+
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<form method="post" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-12">
+			<label>Consultar pelo número do chamado</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4">
+			<input type="text" class="form-control" maxlength="15" title="Consultar chamado" placeholder="Digite o número do chamado." name="cst_chamado" onchange="this.form.submit()"/>
+		</div>
+	</div>
+	</form>
+	<p></p>
+	<form method="post" autocomplete="off">
+	<div class="row">
+		<div class="col-xs-12 col-sm-12">
+			<label>Consultar por combinações </label>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<label>Selecionar Departamento</label>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<label>Equipe Responsável Analise</label>
+		</div>
+		<div class="col-xs-12 col-sm-6">
+			<label>Palavra chave do projeto</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" name="selectdepartamento" onchange="this.form.submit()">
+				<option class="form-control" value="">Selecionar Departamento</option>';
+				<?php $try = $go->buscarDepartamento();$to = $xo->query($try);
+				if(!empty($to)){foreach($to as $depart){ echo '
+				<option class="form-control" value="'.$depart['iddepartamento'].'"';
+				if(isset($_SESSION['selectdepartamento'])){if($_SESSION['selectdepartamento'] == $depart['iddepartamento']){echo " selected>";}else{echo ">";}}else{echo ">";}echo $depart['nome_departamento'].'</option>';}}$try=0;$to=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" name="equipe_apoio">
+				<option class="form-control" value="">Selecionar Equipe</option>
+				<?php if(isset($_SESSION['selectdepartamento'])){
+				$try = $go->buscarEquipe_id($_SESSION['selectdepartamento']);$to = $xo->query($try);}
+				if(!empty($to)){foreach($to as $equipe){ echo'
+				<option class="form-control" value="'.$equipe['nome_equipe'].'"';
+				if(isset($_SESSION['selectdepartamento']) AND $_SESSION['equipe_apoio'] == $equipe['nome_equipe'])echo " selected";echo ">".$equipe['nome_equipe'].'</option>';}}$to=0;?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-6">
+			<input type="text" class="form-control" name="nomeprojeto" title="Palavra chave do projeto" placeholder="Palavra chave do projeto"></input>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<label>Data da Conclusão</label>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<label>Cidade</label>
+		</div>
+		<div class="col-xs-12 col-sm-6">
+			<label>Responsável pela Analise</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" title="Data da Conclusão" name="data_resol" placeholder="Data da Conclusão">
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<input type="text" class="form-control" title="Cidade" name="cidade" placeholder="Cidade"/>
+		</div>
+		<div class="col-xs-12 col-sm-6">
+			<input type="text" class="form-control" name="analista" title="Responsável pela Analise" placeholder="Responsável pela Analise" ></input>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<label>Prazo de Entrega</label>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<label>Status do chamado</label>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<label>Tipo de atividade</label>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<label>Prioridade</label>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-3">
+			<input type="date" class="form-control" id="d_entrega" name="d_entrega" title="Prazo de Entrega" placeholder="Prazo de Entrega" >
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Status do chamado" name="status">
+				<option class="form-control" value="">Status do chamado</option>
+				<?php $try = $go->buscarStatus_Filho();$resu = $xo->query($try);
+				if(!empty($resu)){foreach($resu as $stt){ echo'
+				<option class="form-control" value="'.$stt['nome_status'].'">'.$stt['nome_status'].'</option>';}
+				};?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Tipo de atividade" name="tipo_ativi">
+				<option class="form-control" value="">Tipo de atividade</option>
+				<?php $try = $go->buscarTipo();$resu = $xo->query($try);
+				if(!empty($resu)){foreach($resu as $tipo){ echo'
+				<option class="form-control" value="'.$tipo['nome_tipo'].'">'.$tipo['nome_tipo'].'</option>';}};?>
+			</select>
+		</div>
+		<div class="col-xs-12 col-sm-3">
+			<select class="form-control" title="Prioridade" name="prioridade">
+				<option class="form-control" value="">Prioridade</option>
+				<?php $try = $go->buscarPrioridade();$resu = $xo->query($try);
+				if(!empty($resu)){foreach($resu as $prior){ echo'
+				<option class="form-control" value="'.$prior['idprioridade'].'">'.$prior['nome_prioridade'].'</option>';}};?>
+			</select>
+		</div>
+	</div>
+	<p></p>
+	<div class="row">
+		<div class="col-xs-12 col-sm-4 col-sm-offset-4">
+			<button class="btn btn-success btn-sm btn-block" type="submit" name="consultar">Consultar</button>
+		</div>
+	</div>
+	</form>
+	<div class="row">
+        <div class="col-sm-12">
+           	<hr class="hr">
+		</div>
+	</div>
+	<p></p>
+	<?php if(isset($_POST['cst_chamado'])) echo'
+	<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-center">Chamado</th>
+				<th class="text-center">Nome do projeto</th>
+				<th class="text-center">Tipo Atividade</th>
+				<th class="text-center">Status Atividade</th>
+			</tr>
+		</thead>
+		<tbody>';
+		if(isset($_POST['cst_chamado'])){$try = $go->buscarChamadoFilho_CPai_idPai($_POST['cst_chamado']);$to = $xo->query($try);
+		if(!empty($to)){foreach($to as $cmdo){ echo '
+			<tr>
+				<td class="text-center"><form id="filachamado" method="GET" action="/chamado_detalhe.html" target="_blank"><input type="submit" id="'.$cmdo['idchamado_filho'].'" name="chamado" value="'.$cmdo['chamado'].'" style="display:none;"/><a style="cursor: pointer" onclick="$(\'#'.$cmdo['idchamado_filho'].'\').click();">'.$cmdo['chamado'].'</a></input></form></td>
+				<td class="text-center">'.$cmdo['nome_projeto'].'</td>
+				<td class="text-center">'.$cmdo['nome_tipo'].'</td>
+				<td class="text-center">'.$cmdo['nome_status'].'</td>
+			</tr>';}}}
+		if(isset($_POST['cst_chamado'])) echo'
+		</tbody>
+	</table>
+	</div>';
+	?>
+	<?php if(isset($_POST['consultar'])){ echo'
+	<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-center">Chamado</th>
+				<th class="text-center">Nome do Projeto</th>
+				<th class="text-center">Equipe Responsável</th>
+				<th class="text-center">Equipe de Apoio</th>
+				<th class="text-center">Tipo Atividade</th>
+				<th class="text-center">Status Atividade</th>
+			</tr>
+		</thead>
+		<tbody>';}
+		if(isset($_POST['consultar'])){$try = $go->buscarChamadoFilho_Filtro($_POST['d_entrega'],$_POST['status'],$_POST['tipo_ativi'],$_POST['prioridade'],$_POST['cidade'],$_POST['data_resol'],$_POST['analista'],$_POST['nomeprojeto'],$_POST['equipe_apoio']);$to = $xo->query($try);if(!empty($to)){foreach($to as $cmdo){ echo '
+			<tr>
+				<td class="text-center"><form id="filachamado" method="GET" action="/chamado_detalhe.html" target="_blank"><input type="submit" id="'.$cmdo['idchamado_filho'].'" name="chamado" value="'.$cmdo['chamado'].'" style="display:none;"/><a style="cursor: pointer" onclick="$(\'#'.$cmdo['idchamado_filho'].'\').click();">'.$cmdo['chamado'].'</a></input></form></td>
+				<td class="text-center">'.$cmdo['nome_projeto'].'</td>
+				<td class="text-center">'.$cmdo['requisitante'].'</td>
+				<td class="text-center">'.$cmdo['nome_equipe'].'</td>
+				<td class="text-center">'.$cmdo['nome_tipo'].'</td>
+				<td class="text-center">'.$cmdo['nome_status'].'</td>
+			</tr>';}}}
+		if(isset($_POST['consultar'])){ echo'
+		</tbody>
+	</table>
+	</div>';}
+	?>
+</div>	
+<?php
+	require_once("footer.html");
+?>
